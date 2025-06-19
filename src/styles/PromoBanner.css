@@ -1,0 +1,77 @@
+.registro-banner.full-width {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background-color: #1db5be;
+  padding: 14px 20px;
+  border-radius: 10px 10px 0 0;
+  color: #000;
+  display: flex;
+  justify-content: center;
+}
+
+.banner-content {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 14px;
+}
+
+.registro-banner {
+  background-color: #1db5be;
+  padding: 14px 20px;
+  margin-top: 30px;
+  border-radius: 10px;
+  color: #000;
+  display: flex;
+  justify-content: center;
+}
+
+.banner-content {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 14px;
+}
+
+.user-icon {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.banner-text {
+  flex-grow: 1;
+  font-family: "Montserrat", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.banner-text strong {
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+}
+
+.banner-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: #000;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.banner-link:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}

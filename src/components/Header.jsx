@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Container, Form, Navbar, Nav } from "react-bootstrap";
@@ -7,21 +6,37 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 function Header() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
+    const updateAuthState = () => {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
+      setIsLoggedIn(!!token);
+      setUserRole(user?.role || null);
+    };
+
+    updateAuthState();
+
+    window.addEventListener("login", updateAuthState);
+    window.addEventListener("logout", updateAuthState);
+
+    return () => {
+      window.removeEventListener("login", updateAuthState);
+      window.removeEventListener("logout", updateAuthState);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setIsLoggedIn(false);
+    setUserRole(null);
     navigate("/login");
   };
 
   return (
     <>
-      {/* Navbar superior */}
       <Navbar
         expand="lg"
         style={{ backgroundColor: "#F2F7FF", height: "70px" }}
@@ -37,7 +52,6 @@ function Header() {
             <img src="src/assets/logo.png" alt="Logo" height="40" />
           </Navbar.Brand>
 
-          {/* Buscador */}
           <Form className="mx-auto w-50 position-relative">
             <Form.Control
               type="search"
@@ -57,18 +71,28 @@ function Header() {
             ></i>
           </Form>
 
-          {/* Iconos lado derecho */}
           <div className="d-flex gap-4">
             {isLoggedIn ? (
               <>
-                <div
-                  className="d-flex flex-column align-items-center text-black text-[12px]"
-                  onClick={() => navigate("/perfil")}
-                  style={{ cursor: "pointer" }}
-                >
-                  <i className="bi bi-person-circle fs-5"></i>
-                  <small>Mi perfil</small>
-                </div>
+                {userRole === "admin" ? (
+                  <div
+                    className="d-flex flex-column align-items-center text-black text-[12px]"
+                    onClick={() => navigate("/admin")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <i className="bi bi-speedometer2 fs-5"></i>
+                    <small>Backstage</small>
+                  </div>
+                ) : (
+                  <div
+                    className="d-flex flex-column align-items-center text-black text-[12px]"
+                    onClick={() => navigate("/perfil")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <i className="bi bi-person-circle fs-5"></i>
+                    <small>Mi perfil</small>
+                  </div>
+                )}
                 <div
                   className="d-flex flex-column align-items-center text-black text-[12px]"
                   onClick={handleLogout}

@@ -1,0 +1,16 @@
+.carrusel-img {
+  height: 60vh;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .carrusel-img {
+    height: 40vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .carrusel-img {
+    height: 30vh;
+  }
+}

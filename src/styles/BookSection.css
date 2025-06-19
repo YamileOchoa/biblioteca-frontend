@@ -1,0 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat&display=swap");
+
+.book-card {
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding-bottom: 8px;
+}
+
+.book-card .card-body {
+  padding-top: 8px;
+  padding-bottom: 6px;
+}
+
+.book-cover {
+  height: 250px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.book-title {
+  font-weight: 700 !important;
+  font-size: 20px;
+  font-family: "Montserrat", sans-serif;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+
+.book-info {
+  font-size: 14px;
+  padding-bottom: 8px;
+}
+
+.ver-button {
+  font-weight: 700 !important;
+  background-color: #1db5be;
+  border: none;
+  font-size: 15px;
+  width: 100%;
+  border-radius: 5px;
+  color: #000000;
+  margin-top: auto;
+}
+
+.favorite-icon {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  width: 42px;
+  height: 42px;
+  background-color: #1db5be;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 3;
+  transition: transform 0.2s;
+}
+
+.favorite-icon:hover {
+  transform: scale(1.1);
+}
+
+.section-header {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.section-line {
+  height: 2px;
+  width: 100px;
+  background-color: #1db5be;
+}
+
+.anuncio-container {
+  margin-top: 40px;
+  padding: 0;
+}
+
+.anuncio-img {
+  max-width: 100%;
+  border-radius: 10px;
+}

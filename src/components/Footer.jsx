@@ -3,20 +3,20 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 
 function Footer() {
   return (
-    <footer className="bg-black text-white py-5 mt-5">
+    <footer className="bg-black text-white py-5">
       <Container>
         <Row className="mb-4">
           {/* Sección 1 */}
-          <Col md={3} className="mb-4 mb-md-0">
+          <Col md={3} className="mb-4 mb-md-0 text-center">
             <img
-              src="/src/assets/log.png"
+              src="/src/assets/logo1.png"
               alt="Logo"
-              style={{ width: "120px" }}
+              style={{ width: "200px", height: "auto" }}
             />
-            <p className="mt-3">
+            <p className="mt-2 mb-3">
               Av. Cascanueces, Santa Anita 14923 Lima (Perú)
             </p>
-            <div className="d-flex gap-3 mt-3">
+            <div className="d-flex justify-content-center gap-3">
               <a href="#" className="text-white">
                 <i className="fab fa-instagram"></i>
               </a>
@@ -110,8 +110,8 @@ function Footer() {
 
         <Row>
           <Col className="text-center">
-            <small className="text-muted">
-              2025 © Librería Nombre. Todos los Derechos Reservados | Grupo
+            <small className="text-white">
+              2025 © Library Lectum. Todos los Derechos Reservados | Grupo
               Tecsup
             </small>
           </Col>

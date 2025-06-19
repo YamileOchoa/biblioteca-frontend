@@ -1,17 +1,16 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import Register from "./pages/Register";
-// en App.jsx
 import Login from "./pages/Login";
+import Home from "./pages/Home";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Páginas sin header */}
-
-        {/* Páginas con header */}
+        {/* Todas las páginas que comparten el mismo layout */}
         <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
         </Route>

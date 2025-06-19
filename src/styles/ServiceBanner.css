@@ -1,0 +1,36 @@
+.service-banner {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #1db5be;
+  padding: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.service-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  max-width: 300px;
+  color: #000;
+}
+
+.service-item .icon {
+  font-size: 30px;
+  color: #000;
+}
+
+.service-item .title {
+  font-weight: 700;
+  margin: 0;
+  font-size: 15px;
+  color: #000;
+}
+
+.service-item .desc {
+  margin: 0;
+  font-size: 13px;
+  color: #000;
+}
