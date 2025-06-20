@@ -43,6 +43,7 @@ const Login = () => {
 
       const userData = await userRes.json();
       localStorage.setItem("user", JSON.stringify(userData));
+      console.log("Datos guardados del usuario:", userData);
 
       window.dispatchEvent(new Event("login"));
 

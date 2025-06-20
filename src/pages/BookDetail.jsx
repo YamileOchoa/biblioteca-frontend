@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/BookDetail.css";
-import BooksSection from "./BooksSection";
+import BooksSection from "../components/BooksSection";
 
 const BookDetail = () => {
   const { id } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
   const API_URL = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLoading(true);
@@ -27,6 +31,81 @@ const BookDetail = () => {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  const solicitarPrestamo = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+
+    if (!user || !token) {
+      setModalMessage("Debes iniciar sesión para solicitar un préstamo.");
+      setShowModal(true);
+      setTimeout(() => {
+        setShowModal(false);
+        navigate("/login");
+      }, 2500);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/loans`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Error al obtener préstamos");
+
+      const loans = await res.json();
+      const tienePrestamoActivo = loans.some(
+        (loan) => loan.return_date === null
+      );
+
+      if (tienePrestamoActivo) {
+        setModalMessage(
+          "Ya tienes un préstamo activo. No puedes solicitar otro por ahora."
+        );
+        setShowModal(true);
+        setTimeout(() => setShowModal(false), 3500);
+        return;
+      }
+
+      const postRes = await fetch(`${API_URL}/loans`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ book_id: book.id }),
+      });
+
+      if (!postRes.ok) throw new Error("Error al registrar el préstamo");
+
+      setModalMessage(
+        "Tu solicitud ha sido registrada con éxito. Será evaluada pronto.\n\nSerás redirigido al inicio en unos segundos."
+      );
+      setShowModal(true);
+      setTimeout(() => {
+        setShowModal(false);
+        navigate("/");
+      }, 5000);
+    } catch (error) {
+      console.error("Error al procesar préstamo:", error);
+      setModalMessage("Ocurrió un error inesperado al procesar tu solicitud.");
+      setShowModal(true);
+      setTimeout(() => setShowModal(false), 3500);
+    }
+  };
+
+  const agregarAFavoritos = () => {
+    const favoritos = JSON.parse(localStorage.getItem("favoritos")) || [];
+    if (!favoritos.includes(book.id)) {
+      favoritos.push(book.id);
+      localStorage.setItem("favoritos", JSON.stringify(favoritos));
+      alert("¡Libro agregado a tus favoritos!");
+    } else {
+      alert("Este libro ya está en tus favoritos.");
+    }
+  };
 
   if (loading) return <div className="text-center my-5">Cargando libro...</div>;
   if (book === false)
@@ -94,7 +173,7 @@ const BookDetail = () => {
 
               <div className="col-md-8">
                 <h2 className="fw-bold">{book.title}</h2>
-                <p className="mb-4" style={{ marginBottom: "2rem" }}>
+                <p className="mb-4">
                   <span className="fw-semibold" style={{ color: "#1DB5BE" }}>
                     Por:
                   </span>{" "}
@@ -103,18 +182,27 @@ const BookDetail = () => {
 
                 <div className="d-flex align-items-center gap-3 mb-4">
                   <div className="quantity-box d-flex align-items-center border rounded">
-                    <button className="btn btn-light">-</button>
+                    <button className="btn btn-light" disabled>
+                      -
+                    </button>
                     <span className="px-3">1</span>
-                    <button className="btn btn-light">+</button>
+                    <button className="btn btn-light" disabled>
+                      +
+                    </button>
                   </div>
-                  <button className="btn btn-prestamo">
+
+                  <button
+                    className="btn btn-prestamo"
+                    onClick={solicitarPrestamo}
+                  >
                     SOLICITAR PRÉSTAMO
                   </button>
                 </div>
 
                 <div
                   className="d-flex align-items-center mb-4"
-                  style={{ marginTop: "1rem" }}
+                  style={{ marginTop: "1rem", cursor: "pointer" }}
+                  onClick={agregarAFavoritos}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -176,6 +264,18 @@ const BookDetail = () => {
           "/src/assets/Img/anuncio6.webp",
         ]}
       />
+
+      <Modal show={showModal} centered backdrop="static" keyboard={false}>
+        <Modal.Body className="text-center p-4">
+          <i
+            className="bi bi-info-circle-fill"
+            style={{ fontSize: "3rem", color: "#1DB5BE" }}
+          ></i>
+          <p className="mt-3 fw-semibold" style={{ whiteSpace: "pre-line" }}>
+            {modalMessage}
+          </p>
+        </Modal.Body>
+      </Modal>
     </>
   );
 };
