@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import logo from "../assets/logo.png";
 import { Container, Form, Navbar, Nav } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
@@ -49,7 +50,7 @@ function Header() {
             onClick={() => navigate("/")}
             style={{ cursor: "pointer" }}
           >
-            <img src="src/assets/logo.png" alt="Logo" height="40" />
+            <img src={logo} alt="Logo" height="40" />
           </Navbar.Brand>
 
           <Form className="mx-auto w-50 position-relative">

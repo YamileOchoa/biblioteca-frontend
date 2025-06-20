@@ -1,5 +1,5 @@
 import Carrusel from "../components/Carrusel";
-import BooksSection from "../components/BookSection";
+import BooksSection from "../components/BooksSection";
 import PromoBanner from "../components/PromoBanner";
 
 function Home() {

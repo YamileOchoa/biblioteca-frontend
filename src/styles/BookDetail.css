@@ -1,0 +1,61 @@
+.book-detail-bg {
+  background-color: #d5fafc;
+  min-height: calc(100vh - 100px);
+  display: flex;
+  align-items: center;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.book-detail-card {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 100%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.book-image {
+  max-height: 350px;
+  object-fit: cover;
+}
+
+.book-info-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.btn-prestamo {
+  background-color: #1db5be;
+  color: #000;
+  font-weight: 600;
+  font-family: "Montserrat", sans-serif;
+  padding: 0.5rem 2rem;
+  width: 100%;
+  max-width: 300px;
+  border: none;
+}
+
+.btn-prestamo:hover {
+  background-color: #1db5be;
+  color: #000;
+}
+
+.favorite-icon-red {
+  vertical-align: middle;
+}
+
+.sinopsis-title {
+  font-weight: 600;
+  font-size: 18px;
+  font-family: "Montserrat", sans-serif;
+  margin-bottom: 0.5rem;
+}
+
+.sinopsis-text {
+  font-size: 15px;
+  text-align: justify;
+  font-family: "Montserrat", sans-serif;
+}
