@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { Container, Row, Col, Card, Button, Modal } from "react-bootstrap";
 import "../styles/BookSection.css";
 
 const BooksSection = ({
@@ -8,6 +9,9 @@ const BooksSection = ({
   limit = 12,
 }) => {
   const [books, setBooks] = useState([]);
+  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -23,6 +27,50 @@ const BooksSection = ({
       .catch((err) => console.error("Error al obtener libros:", err));
   }, []);
 
+  const handleAgregarAFavoritos = async (
+    bookId,
+    setModalMessage,
+    setShowModal,
+    navigate
+  ) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+
+    if (!user || !token) {
+      setModalMessage(
+        "Debes acceder a tu cuenta para agregar libros a tu lista de favoritos."
+      );
+      setShowModal(true);
+      setTimeout(() => {
+        setShowModal(false);
+        navigate("/login");
+      }, 3000);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/favorites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ book_id: bookId }),
+      });
+
+      if (!response.ok) throw new Error("No se pudo agregar a favoritos");
+
+      setModalMessage("¡Libro agregado a tus favoritos!");
+      setShowModal(true);
+      setTimeout(() => setShowModal(false), 2500);
+    } catch (error) {
+      console.error("Error al agregar a favoritos:", error);
+      setModalMessage("Ocurrió un error al agregar el libro a favoritos.");
+      setShowModal(true);
+      setTimeout(() => setShowModal(false), 2500);
+    }
+  };
+
   return (
     <Container className="my-5">
       <div className="section-header">
@@ -34,7 +82,18 @@ const BooksSection = ({
         {books.map((book) => (
           <Col xs={12} sm={6} md={4} lg={2} className="mb-4" key={book.id}>
             <Card className="book-card h-100 position-relative">
-              <div className="favorite-icon">
+              <div
+                className="favorite-icon"
+                onClick={() =>
+                  handleAgregarAFavoritos(
+                    book.id,
+                    setModalMessage,
+                    setShowModal,
+                    navigate
+                  )
+                }
+                style={{ cursor: "pointer" }}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width={25}
@@ -50,18 +109,24 @@ const BooksSection = ({
               </div>
 
               <div className="cover-wrapper">
-                <Card.Img
-                  variant="top"
+                <img
                   src={
                     book.cover_image_url
                       ? book.cover_image_url
                       : `/books/card${book.id}.webp?${Date.now()}`
                   }
                   onError={(e) => {
+                    console.log("Fallo imagen:", e.target.src);
                     e.target.onerror = null;
-                    e.target.src = "/books/sin-portada.webp";
+                    e.target.src = "/books/card11.webp";
                   }}
-                  className="book-cover"
+                  style={{
+                    width: "100%",
+                    height: "250px",
+                    objectFit: "cover",
+                    borderRadius: "0.5rem",
+                  }}
+                  alt={book.title}
                 />
               </div>
 
@@ -104,6 +169,18 @@ const BooksSection = ({
           ))}
         </Row>
       )}
+
+      <Modal show={showModal} centered backdrop="static" keyboard={false}>
+        <Modal.Body className="text-center p-4">
+          <i
+            className="bi bi-info-circle-fill"
+            style={{ fontSize: "3rem", color: "#1DB5BE" }}
+          ></i>
+          <p className="mt-3 fw-semibold" style={{ whiteSpace: "pre-line" }}>
+            {modalMessage}
+          </p>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };

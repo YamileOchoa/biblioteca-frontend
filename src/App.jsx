@@ -3,6 +3,7 @@ import MainLayout from "./layouts/MainLayout";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import Favorites from "./pages/Favorites";
 import BookDetail from "./pages/BookDetail";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/books/:id" element={<BookDetail />} />
+          <Route path="/favoritos" element={<Favorites />} />
         </Route>
       </Routes>
     </BrowserRouter>

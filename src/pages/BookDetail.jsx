@@ -96,20 +96,57 @@ const BookDetail = () => {
     }
   };
 
-  const agregarAFavoritos = () => {
-    const favoritos = JSON.parse(localStorage.getItem("favoritos")) || [];
-    if (!favoritos.includes(book.id)) {
-      favoritos.push(book.id);
-      localStorage.setItem("favoritos", JSON.stringify(favoritos));
-      alert("¡Libro agregado a tus favoritos!");
-    } else {
-      alert("Este libro ya está en tus favoritos.");
+  const handleAgregarAFavoritos = async (
+    bookId,
+    setModalMessage,
+    setShowModal,
+    navigate
+  ) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+
+    if (!user || !token) {
+      setModalMessage(
+        "Debes acceder a tu cuenta para agregar libros a tu lista de favoritos."
+      );
+      setShowModal(true);
+      setTimeout(() => {
+        setShowModal(false);
+        navigate("/login");
+      }, 3000);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/favorites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ book_id: bookId }),
+      });
+
+      if (!response.ok) throw new Error("No se pudo agregar a favoritos");
+
+      setModalMessage("¡Libro agregado a tus favoritos!");
+      setShowModal(true);
+      setTimeout(() => setShowModal(false), 2500);
+    } catch (error) {
+      console.error("Error al agregar a favoritos:", error);
+      setModalMessage("Ocurrió un error al agregar el libro a favoritos.");
+      setShowModal(true);
+      setTimeout(() => setShowModal(false), 2500);
     }
   };
 
-  if (loading) return <div className="text-center my-5">Cargando libro...</div>;
-  if (book === false)
+  if (loading || book === null) {
+    return <div className="text-center my-5">Cargando libro...</div>;
+  }
+
+  if (book === false) {
     return <div className="text-center my-5">Libro no encontrado 😢</div>;
+  }
 
   return (
     <>
@@ -202,7 +239,14 @@ const BookDetail = () => {
                 <div
                   className="d-flex align-items-center mb-4"
                   style={{ marginTop: "1rem", cursor: "pointer" }}
-                  onClick={agregarAFavoritos}
+                  onClick={() =>
+                    handleAgregarAFavoritos(
+                      book.id,
+                      setModalMessage,
+                      setShowModal,
+                      navigate
+                    )
+                  }
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
