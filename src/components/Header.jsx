@@ -31,9 +31,9 @@ function Header() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUserRole(null);
-    navigate("/login");
+
+    // Forzar recarga total para limpiar estado completamente
+    window.location.href = "/login";
   };
 
   return (

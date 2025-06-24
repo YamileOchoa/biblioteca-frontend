@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 
+const API = import.meta.env.VITE_API_URL;
+
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [userRole, setUserRole] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -18,8 +21,9 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/login", {
+      const res = await fetch(`${API}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -31,10 +35,11 @@ const Login = () => {
         throw new Error(data.message || "Credenciales incorrectas");
       }
 
+      // Guardar token
       localStorage.setItem("token", data.token);
 
-      const userRes = await fetch("http://127.0.0.1:8000/api/user", {
-        method: "GET",
+      // Obtener datos del usuario autenticado
+      const userRes = await fetch(`${API}/user`, {
         headers: {
           Authorization: `Bearer ${data.token}`,
           Accept: "application/json",
@@ -42,12 +47,19 @@ const Login = () => {
       });
 
       const userData = await userRes.json();
-      localStorage.setItem("user", JSON.stringify(userData));
-      console.log("Datos guardados del usuario:", userData);
+
+      // Verificar si ya hay sesión activa
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (user?.role === "admin") {
+        navigate("/admin");
+        return null;
+      } else if (user) {
+        navigate("/");
+        return null;
+      }
 
       window.dispatchEvent(new Event("login"));
-
-      setShowModal(true);
     } catch (error) {
       alert("Error al iniciar sesión: " + error.message);
     }
@@ -64,10 +76,8 @@ const Login = () => {
         className="d-flex align-items-center justify-content-center w-100"
         style={{
           backgroundColor: "#D5FAFC",
-          fontFamily: "Montserrat, sans-serif",
           minHeight: "calc(100vh - 300px)",
-          paddingTop: "40px",
-          paddingBottom: "40px",
+          padding: "40px 0",
         }}
       >
         <form
@@ -160,6 +170,7 @@ const Login = () => {
         </form>
       </div>
 
+      {/* Modal para usuario no admin */}
       <Modal
         show={showModal}
         onHide={handleClose}
