@@ -7,11 +7,11 @@ function Home() {
     <>
       <Carrusel />
 
-      {/* Sección 1 - Literatura */}
       <BooksSection
         title="NOVEDADES LITERARIAS QUE NO TE PUEDES PERDER"
         ads={["/src/assets/Img/anuncio1.jpg"]}
       />
+
       <PromoBanner
         icon="bi-person-circle"
         strongText="¿AÚN NO TIENES CUENTA?"
@@ -20,11 +20,17 @@ function Home() {
         href="/register"
       />
 
-      {/* Sección 2 - Narrativa Peruana */}
       <BooksSection
         title="EXPLORA LA RIQUEZA DE LA NARRATIVA PERUANA"
+        limit={6}
+      />
+
+      <BooksSection
+        title="HISTORIAS PARA SOÑAR, CRECER Y SENTIR"
+        limit={6}
         ads={["/src/assets/Img/anuncio2.webp", "/src/assets/Img/anuncio3.webp"]}
       />
+
       <PromoBanner
         icon="bi-book-half"
         strongText="¡SOLICITA HOY, LÉELO HOY!"
@@ -33,7 +39,6 @@ function Home() {
         href="/books"
       />
 
-      {/* Sección 3 - Cómics */}
       <BooksSection
         title="COMICS, MANGAS Y MUCHA EMOCIÓN EN CADA PÁGINA"
         limit={6}

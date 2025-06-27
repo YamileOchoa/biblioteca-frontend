@@ -1,40 +1,16 @@
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 import logo from "../assets/logo.png";
 import { Container, Form, Navbar, Nav } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function Header() {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null);
+  const { user, logout } = useContext(AuthContext);
 
-  useEffect(() => {
-    const updateAuthState = () => {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user"));
-      setIsLoggedIn(!!token);
-      setUserRole(user?.role || null);
-    };
-
-    updateAuthState();
-
-    window.addEventListener("login", updateAuthState);
-    window.addEventListener("logout", updateAuthState);
-
-    return () => {
-      window.removeEventListener("login", updateAuthState);
-      window.removeEventListener("logout", updateAuthState);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    // Forzar recarga total para limpiar estado completamente
-    window.location.href = "/login";
-  };
+  const isLoggedIn = !!user;
+  const userRole = user?.role || null;
 
   return (
     <>
@@ -96,7 +72,7 @@ function Header() {
                 )}
                 <div
                   className="d-flex flex-column align-items-center text-black text-[12px]"
-                  onClick={handleLogout}
+                  onClick={logout}
                   style={{ cursor: "pointer" }}
                 >
                   <i className="bi bi-box-arrow-right fs-5"></i>
@@ -126,7 +102,6 @@ function Header() {
         </Container>
       </Navbar>
 
-      {/* Navbar inferior */}
       <Navbar bg="white" expand="lg" className="shadow-sm">
         <Container fluid className="px-5">
           <Navbar.Toggle aria-controls="nav-links" />
@@ -137,35 +112,31 @@ function Header() {
             >
               <Nav.Link
                 onClick={() => navigate("/")}
-                style={{ fontSize: "12px", cursor: "pointer" }}
+                style={{ fontSize: "12px" }}
               >
                 INICIO
               </Nav.Link>
               <Nav.Link
                 onClick={() => navigate("/mis-libros")}
-                style={{ fontSize: "12px", cursor: "pointer" }}
+                style={{ fontSize: "12px" }}
               >
                 MIS LIBROS
               </Nav.Link>
               <Nav.Link
                 onClick={() => navigate("/mis-prestamos")}
-                style={{ fontSize: "12px", cursor: "pointer" }}
+                style={{ fontSize: "12px" }}
               >
                 MIS PRÉSTAMOS
               </Nav.Link>
               <Nav.Link
                 onClick={() => navigate("/favoritos")}
-                style={{ fontSize: "12px", cursor: "pointer" }}
+                style={{ fontSize: "12px" }}
               >
                 FAVORITOS
               </Nav.Link>
               <Nav.Link
                 onClick={() => navigate("/ayuda")}
-                style={{
-                  fontSize: "12px",
-                  color: "#1DB5BE",
-                  cursor: "pointer",
-                }}
+                style={{ fontSize: "12px", color: "#1DB5BE" }}
               >
                 AYUDA
               </Nav.Link>

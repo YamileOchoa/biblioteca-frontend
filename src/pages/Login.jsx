@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
-
-const API = import.meta.env.VITE_API_URL;
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const Login = () => {
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [userRole, setUserRole] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,43 +24,14 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const userData = await login(form);
+      if (!userData) return;
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Credenciales incorrectas");
-      }
-
-      // Guardar token
-      localStorage.setItem("token", data.token);
-
-      // Obtener datos del usuario autenticado
-      const userRes = await fetch(`${API}/user`, {
-        headers: {
-          Authorization: `Bearer ${data.token}`,
-          Accept: "application/json",
-        },
-      });
-
-      const userData = await userRes.json();
-
-      // Verificar si ya hay sesión activa
-      const user = JSON.parse(localStorage.getItem("user"));
-
-      if (user?.role === "admin") {
+      if (userData.role === "admin") {
         navigate("/admin");
-        return null;
-      } else if (user) {
-        navigate("/");
-        return null;
+      } else {
+        setShowModal(true);
       }
-
-      window.dispatchEvent(new Event("login"));
     } catch (error) {
       alert("Error al iniciar sesión: " + error.message);
     }
@@ -69,7 +41,6 @@ const Login = () => {
     setShowModal(false);
     navigate("/");
   };
-
   return (
     <>
       <div
@@ -170,7 +141,6 @@ const Login = () => {
         </form>
       </div>
 
-      {/* Modal para usuario no admin */}
       <Modal
         show={showModal}
         onHide={handleClose}

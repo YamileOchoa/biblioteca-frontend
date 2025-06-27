@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CategoryForm from "../components/CategoryForm";
+import { Modal } from "react-bootstrap";
 
 const API = import.meta.env.VITE_API_URL;
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [mensaje, setMensaje] = useState("");
+  const [searchId, setSearchId] = useState("");
   const navigate = useNavigate();
-
   const token = localStorage.getItem("token");
 
   const fetchCategories = () => {
@@ -32,7 +35,10 @@ const Categories = () => {
         }
         return res.json();
       })
-      .then(setCategories)
+      .then((data) => {
+        setCategories(data);
+        setFilteredCategories(data);
+      })
       .catch((err) => console.error("Error cargando categorías:", err));
   };
 
@@ -65,6 +71,27 @@ const Categories = () => {
     }
   };
 
+  const handleSearch = () => {
+    if (!searchId) return;
+    fetch(`${API}/categories/${searchId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Categoría no encontrada");
+      })
+      .then((data) => setFilteredCategories([data]))
+      .catch(() => setFilteredCategories([]));
+  };
+
+  const handleClearSearch = () => {
+    setSearchId("");
+    setFilteredCategories(categories);
+  };
+
   return (
     <div
       style={{
@@ -73,29 +100,68 @@ const Categories = () => {
         padding: "2rem",
       }}
     >
-      <div className="d-flex justify-content-between mb-4">
-        <h2 style={{ color: "#10274C" }}>🏷️ Categorías</h2>
-        {!showForm ? (
+      <h2 style={{ color: "#10274C", fontWeight: "600", marginBottom: "2rem" }}>
+        Gestión de Categorías
+      </h2>
+
+      <div className="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+        <div className="d-flex gap-2 align-items-center">
+          <input
+            type="number"
+            placeholder="Buscar por ID"
+            className="form-control"
+            style={{ maxWidth: "220px", borderColor: "#cdd7e1" }}
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+          />
           <button
-            className="btn btn-primary"
-            onClick={() => {
-              setCategoryToEdit(null);
-              setShowForm(true);
+            className="btn"
+            style={{
+              backgroundColor: "#1F3A63",
+              color: "#fff",
+              fontWeight: "500",
             }}
+            onClick={handleSearch}
           >
-            ➕ Nueva Categoría
+            Buscar
           </button>
-        ) : (
           <button
             className="btn btn-outline-secondary"
-            onClick={() => {
-              setShowForm(false);
-              setCategoryToEdit(null);
-            }}
+            onClick={handleClearSearch}
+            title="Limpiar búsqueda"
           >
-            ✖️ Cancelar
+            Limpiar
           </button>
-        )}
+        </div>
+
+        <div>
+          {!showForm ? (
+            <button
+              className="btn"
+              style={{
+                backgroundColor: "#1F3A63",
+                color: "#fff",
+                fontWeight: "500",
+              }}
+              onClick={() => {
+                setCategoryToEdit(null);
+                setShowForm(true);
+              }}
+            >
+              Nueva categoría
+            </button>
+          ) : (
+            <button
+              className="btn btn-outline-secondary"
+              onClick={() => {
+                setShowForm(false);
+                setCategoryToEdit(null);
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
       </div>
 
       {mensaje && (
@@ -128,48 +194,105 @@ const Categories = () => {
         />
       )}
 
-      <table className="table table-bordered table-hover">
-        <thead className="table-light">
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((c) => (
-            <tr key={c.id}>
-              <td>{c.id}</td>
-              <td>{c.name}</td>
-              <td>
-                <button
-                  className="btn btn-sm btn-warning me-2"
-                  onClick={() => {
-                    setCategoryToEdit(c);
-                    setShowForm(true);
-                  }}
-                >
-                  ✏️
-                </button>
-                <button
-                  className="btn btn-sm btn-danger"
-                  onClick={() => handleDelete(c.id)}
-                >
-                  🗑️
-                </button>
-              </td>
+      <div className="table-responsive">
+        <table
+          className="table table-bordered table-hover table-striped"
+          style={{ borderRadius: "8px", overflow: "hidden" }}
+        >
+          <thead style={{ backgroundColor: "#eaf1ff", color: "#10274C" }}>
+            <tr className="text-center">
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredCategories.map((c) => (
+              <tr key={c.id} className="text-center align-middle">
+                <td>{c.id}</td>
+                <td>{c.name}</td>
+                <td>
+                  <div className="d-flex justify-content-center gap-2 flex-wrap">
+                    <button
+                      className="btn btn-sm"
+                      style={{
+                        backgroundColor: "#6C757D",
+                        color: "#fff",
+                        fontWeight: "500",
+                      }}
+                      onClick={() => setSelectedCategory(c)}
+                    >
+                      Detalle
+                    </button>
+                    <button
+                      className="btn btn-sm"
+                      style={{
+                        backgroundColor: "#1F3A63",
+                        color: "#fff",
+                        fontWeight: "500",
+                      }}
+                      onClick={() => {
+                        setCategoryToEdit(c);
+                        setShowForm(true);
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className="btn btn-sm"
+                      style={{
+                        backgroundColor: "#DC3545",
+                        color: "#fff",
+                        fontWeight: "500",
+                      }}
+                      onClick={() => handleDelete(c.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {selectedCategory && (
+        <Modal show onHide={() => setSelectedCategory(null)} centered>
+          <Modal.Header
+            closeButton
+            style={{
+              backgroundColor: "#1F3A63",
+              color: "white",
+              borderBottom: "none",
+            }}
+            closeVariant="white"
+          >
+            <Modal.Title style={{ fontWeight: "500" }}>
+              Detalle de Categoría
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="px-4 py-3">
+            <p>
+              <strong>Nombre:</strong> {selectedCategory.name}
+            </p>
+            <p>
+              <strong>Descripción:</strong>
+            </p>
+            <p className="text-secondary">
+              {selectedCategory.description || "No hay descripción registrada."}
+            </p>
+          </Modal.Body>
+        </Modal>
+      )}
 
       <style>
         {`
           .table-hover tbody tr:hover {
-            background-color: #eaf1ff;
+            background-color: #f0f5ff;
           }
           .table-bordered th, .table-bordered td {
-            border-color: #10274C !important;
+            border-color: #cdd7e1 !important;
           }
         `}
       </style>

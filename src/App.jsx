@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
 
 import MainLayout from "./layouts/MainLayout";
 import Register from "./pages/Register";
@@ -19,81 +20,35 @@ import Categories from "./Administrador/pages/Categories";
 import Loans from "./Administrador/pages/Loans";
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [checkingAuth, setCheckingAuth] = useState(true); // <- para evitar parpadeo
+  const { user, checkingAuth } = useContext(AuthContext);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setCheckingAuth(false);
-      return;
-    }
-
-    fetch("http://127.0.0.1:8000/api/user", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then((userData) => {
-        setUser(userData);
-      })
-      .catch(() => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setUser(null);
-      })
-      .finally(() => setCheckingAuth(false));
-  }, []);
-
-  if (checkingAuth)
+  if (checkingAuth && window.location.pathname.startsWith("/admin")) {
     return <p className="text-center mt-5">Verificando sesión...</p>;
+  }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Layout público */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/login"
-            element={
-              checkingAuth ? (
-                <p className="text-center mt-5">Verificando sesión...</p>
-              ) : user?.role === "admin" ? (
-                <Navigate to="/admin" replace />
-              ) : user ? (
-                <Navigate to="/" replace />
-              ) : (
-                <Login />
-              )
-            }
-          />
+    <Routes>
+      {/* Layout público */}
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/books/:id" element={<BookDetail />} />
+        <Route path="/favoritos" element={<Favorites />} />
+      </Route>
 
-          <Route path="/books/:id" element={<BookDetail />} />
-          <Route path="/favoritos" element={<Favorites />} />
+      {/* Layout admin protegido */}
+      <Route element={<PrivateRoute role="admin" />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="books" element={<Books />} />
+          <Route path="authors" element={<Authors />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="users" element={<Users />} />
+          <Route path="loans" element={<Loans />} />
         </Route>
-
-        {/* Layout administrador */}
-        <Route element={<PrivateRoute user={user} role="admin" />}>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="books" element={<Books />} />
-            <Route path="authors" element={<Authors />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="users" element={<Users />} />
-            <Route path="loans" element={<Loans />} />
-          </Route>
-        </Route>
-      </Routes>
-    </BrowserRouter>
+      </Route>
+    </Routes>
   );
 }
 

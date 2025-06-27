@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BookForm from "../components/BookForm";
+import { Modal } from "react-bootstrap";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -9,8 +10,13 @@ const Books = () => {
   const [showForm, setShowForm] = useState(false);
   const [bookToEdit, setBookToEdit] = useState(null);
   const [mensaje, setMensaje] = useState("");
-  const navigate = useNavigate();
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
 
+  const [searchId, setSearchId] = useState("");
+  const [searchResult, setSearchResult] = useState(null);
+
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
   const fetchBooks = () => {
@@ -57,12 +63,40 @@ const Books = () => {
 
       if (res.ok) {
         fetchBooks();
-        setMensaje("🗑️ Libro eliminado con éxito");
+        setMensaje("Libro eliminado con éxito");
         setTimeout(() => setMensaje(""), 3000);
       }
     } catch (err) {
       console.error("Error al eliminar libro:", err);
     }
+  };
+
+  const handleSearch = async () => {
+    if (!searchId.trim()) return;
+
+    try {
+      const res = await fetch(`${API}/books/${searchId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResult(data);
+      } else {
+        setSearchResult(null);
+        alert("Libro no encontrado.");
+      }
+    } catch (err) {
+      console.error("Error al buscar libro:", err);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchId("");
+    setSearchResult(null);
   };
 
   return (
@@ -73,17 +107,62 @@ const Books = () => {
         padding: "2rem",
       }}
     >
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 style={{ color: "#10274C", fontWeight: "bold" }}>📚 Libros</h2>
+      <h2
+        style={{
+          color: "#10274C",
+          fontWeight: "600",
+          marginBottom: "2rem",
+        }}
+      >
+        Gestión de Libros
+      </h2>
+
+      <div className="d-flex justify-content-between align-items-end mb-4 flex-wrap">
+        <div className="d-flex gap-2 align-items-center mb-2 mb-md-0">
+          <input
+            type="number"
+            placeholder="Buscar por ID"
+            className="form-control"
+            style={{ maxWidth: "220px", borderColor: "#cdd7e1" }}
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+          />
+          <button
+            className="btn"
+            type="button"
+            style={{
+              backgroundColor: "#1F3A63",
+              color: "#fff",
+              fontWeight: "500",
+            }}
+            onClick={handleSearch}
+          >
+            Buscar
+          </button>
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={handleClearSearch}
+            title="Limpiar búsqueda"
+          >
+            Limpiar
+          </button>
+        </div>
+
         {!showForm ? (
           <button
-            className="btn btn-primary"
+            className="btn"
+            style={{
+              backgroundColor: "#1F3A63",
+              color: "#fff",
+              fontWeight: "500",
+            }}
             onClick={() => {
               setBookToEdit(null);
               setShowForm(true);
             }}
           >
-            ➕ Nuevo libro
+            Nuevo libro
           </button>
         ) : (
           <button
@@ -93,7 +172,7 @@ const Books = () => {
               setShowForm(false);
             }}
           >
-            ✖️ Cancelar
+            Cancelar
           </button>
         )}
       </div>
@@ -118,7 +197,7 @@ const Books = () => {
             fetchBooks();
             setShowForm(false);
             setBookToEdit(null);
-            setMensaje("✅ Libro guardado con éxito");
+            setMensaje("Libro guardado con éxito");
             setTimeout(() => setMensaje(""), 3000);
           }}
           onCancel={() => {
@@ -129,9 +208,15 @@ const Books = () => {
       )}
 
       <div className="table-responsive">
-        <table className="table table-hover table-bordered">
-          <thead className="table-light">
-            <tr>
+        <table
+          className="table table-bordered table-hover table-striped"
+          style={{
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          <thead style={{ backgroundColor: "#eaf1ff", color: "#10274C" }}>
+            <tr className="text-center">
               <th>ID</th>
               <th>Título</th>
               <th>Año</th>
@@ -141,29 +226,55 @@ const Books = () => {
             </tr>
           </thead>
           <tbody>
-            {books.map((book) => (
-              <tr key={book.id}>
+            {(searchResult ? [searchResult] : books).map((book) => (
+              <tr key={book.id} className="text-center align-middle">
                 <td>{book.id}</td>
                 <td>{book.title}</td>
                 <td>{book.year}</td>
                 <td>{book.publisher}</td>
                 <td>{book.stock}</td>
                 <td>
-                  <button
-                    className="btn btn-sm btn-warning me-2"
-                    onClick={() => {
-                      setBookToEdit(book);
-                      setShowForm(true);
-                    }}
-                  >
-                    ✏️ Editar
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(book.id)}
-                  >
-                    🗑️ Eliminar
-                  </button>
+                  <div className="d-flex justify-content-center gap-2 flex-wrap">
+                    <button
+                      className="btn btn-sm"
+                      style={{
+                        backgroundColor: "#6C757D",
+                        color: "#fff",
+                        fontWeight: "500",
+                      }}
+                      onClick={() => {
+                        setSelectedBook(book);
+                        setShowDetail(true);
+                      }}
+                    >
+                      Detalle
+                    </button>
+                    <button
+                      className="btn btn-sm"
+                      style={{
+                        backgroundColor: "#1F3A63",
+                        color: "#fff",
+                        fontWeight: "500",
+                      }}
+                      onClick={() => {
+                        setBookToEdit(book);
+                        setShowForm(true);
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className="btn btn-sm"
+                      style={{
+                        backgroundColor: "#DC3545",
+                        color: "#fff",
+                        fontWeight: "500",
+                      }}
+                      onClick={() => handleDelete(book.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -171,13 +282,99 @@ const Books = () => {
         </table>
       </div>
 
+      {showDetail && selectedBook && (
+        <Modal
+          show
+          onHide={() => {
+            setShowDetail(false);
+            setSelectedBook(null);
+          }}
+          centered
+          size="lg"
+          backdrop="static"
+        >
+          <Modal.Header
+            closeButton
+            closeVariant="white"
+            style={{
+              backgroundColor: "#1F3A63",
+              color: "white",
+              borderBottom: "none",
+            }}
+          >
+            <Modal.Title style={{ fontWeight: "500" }}>
+              Detalle del Libro
+            </Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body className="px-4 py-3">
+            <div className="row">
+              <div className="col-md-4 text-center mb-3">
+                <img
+                  src={`/books/card${selectedBook.id}.webp`}
+                  alt={selectedBook.title}
+                  style={{
+                    width: "100%",
+                    maxHeight: "300px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    border: "1px solid #ccc",
+                  }}
+                  onError={(e) => {
+                    e.target.src = "/books/default.webp";
+                  }}
+                />
+              </div>
+
+              <div className="col-md-8">
+                <h5 style={{ color: "#10274C", fontWeight: "600" }}>
+                  {selectedBook.title}
+                </h5>
+
+                <div className="row mt-3">
+                  <div className="col-sm-6">
+                    <p>
+                      <strong>ID:</strong> {selectedBook.id}
+                    </p>
+                    <p>
+                      <strong>Año:</strong> {selectedBook.year}
+                    </p>
+                    <p>
+                      <strong>Editorial:</strong> {selectedBook.publisher}
+                    </p>
+                  </div>
+                  <div className="col-sm-6">
+                    <p>
+                      <strong>ISBN:</strong> {selectedBook.isbn}
+                    </p>
+                    <p>
+                      <strong>Páginas:</strong> {selectedBook.pages}
+                    </p>
+                    <p>
+                      <strong>Stock:</strong> {selectedBook.stock}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <p>
+                    <strong>Sinopsis:</strong>
+                  </p>
+                  <p className="text-secondary">{selectedBook.synopsis}</p>
+                </div>
+              </div>
+            </div>
+          </Modal.Body>
+        </Modal>
+      )}
+
       <style>
         {`
           .table-hover tbody tr:hover {
-            background-color: #eaf1ff;
+            background-color: #f0f5ff;
           }
           .table-bordered th, .table-bordered td {
-            border-color: #10274C !important;
+            border-color: #cdd7e1 !important;
           }
         `}
       </style>

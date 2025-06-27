@@ -22,18 +22,24 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  const authHeaders = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
   useEffect(() => {
     if (!token) {
       navigate("/login");
       return;
     }
 
-    fetch(`${API}/authors`)
+    fetch(`${API}/authors`, { headers: authHeaders })
       .then((res) => res.json())
       .then(setAuthors)
       .catch(console.error);
 
-    fetch(`${API}/categories`)
+    fetch(`${API}/categories`, { headers: authHeaders })
       .then((res) => res.json())
       .then(setCategories)
       .catch(console.error);
@@ -58,17 +64,24 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
       return;
     }
 
-    const method = bookToEdit ? "PUT" : "POST";
-    const url = bookToEdit ? `${API}/books/${bookToEdit.id}` : `${API}/books`;
+    const method = bookToEdit ? "POST" : "POST";
+    const url = bookToEdit
+      ? `${API}/books/${bookToEdit.id}?_method=PUT`
+      : `${API}/books`;
+
+    const formData = new FormData();
+    for (const key in form) {
+      formData.append(key, form[key]);
+    }
 
     try {
       const res = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
-        body: JSON.stringify(form),
+        body: formData,
       });
 
       if (res.status === 401) {
@@ -79,7 +92,8 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
       if (res.ok) {
         onSuccess();
       } else {
-        console.error("Error al guardar libro");
+        const errorData = await res.json();
+        console.error("Error al guardar libro:", errorData);
       }
     } catch (err) {
       console.error("Error en la solicitud:", err);
@@ -92,13 +106,13 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
       className="mb-4 bg-white p-4 rounded shadow-sm border border-2"
       style={{ borderColor: "#10274C" }}
     >
-      <h4 className="mb-3" style={{ color: "#10274C" }}>
-        {bookToEdit ? "✏️ Editar Libro" : "➕ Nuevo Libro"}
+      <h4 className="mb-3" style={{ color: "#10274C", fontWeight: "600" }}>
+        {bookToEdit ? "Editar Libro" : "Nuevo Libro"}
       </h4>
 
       <div className="row g-3">
         <div className="col-md-6">
-          <label className="form-label">Título</label>
+          <label className="form-label fw-semibold text-dark">Título</label>
           <input
             name="title"
             value={form.title}
@@ -107,8 +121,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             required
           />
         </div>
+
         <div className="col-md-6">
-          <label className="form-label">ISBN</label>
+          <label className="form-label fw-semibold text-dark">ISBN</label>
           <input
             name="isbn"
             value={form.isbn}
@@ -117,8 +132,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             required
           />
         </div>
+
         <div className="col-md-4">
-          <label className="form-label">Año</label>
+          <label className="form-label fw-semibold text-dark">Año</label>
           <input
             name="year"
             type="number"
@@ -128,8 +144,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             required
           />
         </div>
+
         <div className="col-md-4">
-          <label className="form-label">Autor</label>
+          <label className="form-label fw-semibold text-dark">Autor</label>
           <select
             name="author_id"
             value={form.author_id}
@@ -145,8 +162,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             ))}
           </select>
         </div>
+
         <div className="col-md-4">
-          <label className="form-label">Categoría</label>
+          <label className="form-label fw-semibold text-dark">Categoría</label>
           <select
             name="category_id"
             value={form.category_id}
@@ -162,8 +180,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             ))}
           </select>
         </div>
+
         <div className="col-md-6">
-          <label className="form-label">Editorial</label>
+          <label className="form-label fw-semibold text-dark">Editorial</label>
           <input
             name="publisher"
             value={form.publisher}
@@ -171,8 +190,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             className="form-control"
           />
         </div>
+
         <div className="col-md-3">
-          <label className="form-label">Páginas</label>
+          <label className="form-label fw-semibold text-dark">Páginas</label>
           <input
             name="pages"
             value={form.pages}
@@ -181,8 +201,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             type="number"
           />
         </div>
+
         <div className="col-md-3">
-          <label className="form-label">Stock</label>
+          <label className="form-label fw-semibold text-dark">Stock</label>
           <input
             name="stock"
             value={form.stock}
@@ -191,8 +212,9 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             type="number"
           />
         </div>
+
         <div className="col-12">
-          <label className="form-label">Sinopsis</label>
+          <label className="form-label fw-semibold text-dark">Sinopsis</label>
           <textarea
             name="synopsis"
             value={form.synopsis}
@@ -201,21 +223,43 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
             rows="3"
           />
         </div>
+
         <div className="col-md-6">
-          <label className="form-label">Nombre del archivo de portada</label>
+          <label className="form-label fw-semibold text-dark">
+            Archivo de portada (imagen)
+          </label>
           <input
             name="cover_image"
-            value={form.cover_image}
-            onChange={handleChange}
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                cover_image: e.target.files[0],
+              }))
+            }
             className="form-control"
-            placeholder="Ej: card12.webp"
-            required
+            required={!bookToEdit}
           />
         </div>
+
         <div className="col-md-6 d-flex align-items-end">
-          {form.cover_image && (
+          {form.cover_image && typeof form.cover_image === "object" && (
             <img
-              src={`/books/${form.cover_image}`}
+              src={URL.createObjectURL(form.cover_image)}
+              alt="preview"
+              style={{
+                width: "90px",
+                height: "130px",
+                objectFit: "cover",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+            />
+          )}
+          {bookToEdit && !form.cover_image && bookToEdit.cover_image_url && (
+            <img
+              src={bookToEdit.cover_image_url}
               alt="preview"
               style={{
                 width: "90px",
@@ -230,7 +274,15 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
       </div>
 
       <div className="mt-4">
-        <button type="submit" className="btn btn-success me-2">
+        <button
+          type="submit"
+          className="btn me-2"
+          style={{
+            backgroundColor: "#1F3A63",
+            color: "#fff",
+            fontWeight: "500",
+          }}
+        >
           {bookToEdit ? "Actualizar" : "Crear"}
         </button>
         <button

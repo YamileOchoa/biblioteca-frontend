@@ -3,16 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Button, Modal } from "react-bootstrap";
 import "../styles/BookSection.css";
 
-const BooksSection = ({
-  title = "NOVEDADES LITERARIAS QUE NO TE PUEDES PERDER",
-  ads = [],
-  limit = 12,
-}) => {
+const BooksSection = ({ title, ads = [], limit = 12 }) => {
   const [books, setBooks] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const API_URL = import.meta.env.VITE_API_URL;
+
+  const getCategoryFilter = () => {
+    if (title.includes("LITERARIAS")) return ["Literatura"];
+    if (title.includes("PERUANA")) return ["Narrativa peruana"];
+    if (title.includes("COMICS")) return ["Cómics", "Mangas"];
+    if (title.includes("SOÑAR")) return ["Juvenil", "Romance", "Fantasía"];
+    return null;
+  };
 
   useEffect(() => {
     fetch(`${API_URL}/books/available`)
@@ -21,24 +25,31 @@ const BooksSection = ({
         return res.json();
       })
       .then((data) => {
-        console.log("Libros desde la API:", data);
-        setBooks(data.slice(0, limit));
+        const categoryFilters = getCategoryFilter();
+        let filteredBooks = data;
+
+        if (categoryFilters) {
+          filteredBooks = data.filter((book) =>
+            categoryFilters.some(
+              (filter) =>
+                book.category?.name?.toLowerCase() === filter.toLowerCase()
+            )
+          );
+        }
+
+        const maxBooks = title.includes("PERUANA") ? 6 : limit;
+        setBooks(filteredBooks.slice(0, maxBooks));
       })
       .catch((err) => console.error("Error al obtener libros:", err));
   }, []);
 
-  const handleAgregarAFavoritos = async (
-    bookId,
-    setModalMessage,
-    setShowModal,
-    navigate
-  ) => {
+  const handleAgregarAFavoritos = async (bookId) => {
     const user = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
 
     if (!user || !token) {
       setModalMessage(
-        "Debes acceder a tu cuenta para agregar libros a tu lista de favoritos."
+        "Debes acceder a tu cuenta para agregar libros a favoritos."
       );
       setShowModal(true);
       setTimeout(() => {
@@ -84,15 +95,7 @@ const BooksSection = ({
             <Card className="book-card h-100 position-relative">
               <div
                 className="favorite-icon"
-                onClick={() =>
-                  handleAgregarAFavoritos(
-                    book.id,
-                    setModalMessage,
-                    setShowModal,
-                    navigate
-                  )
-                }
-                style={{ cursor: "pointer" }}
+                onClick={() => handleAgregarAFavoritos(book.id)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -110,22 +113,12 @@ const BooksSection = ({
 
               <div className="cover-wrapper">
                 <img
-                  src={
-                    book.cover_image_url
-                      ? book.cover_image_url
-                      : `/books/card${book.id}.webp?${Date.now()}`
-                  }
+                  src={`/books/card${book.id}.webp?${book.id}`}
                   onError={(e) => {
-                    console.log("Fallo imagen:", e.target.src);
                     e.target.onerror = null;
-                    e.target.src = "/books/card11.webp";
+                    e.target.src = "/books/default.webp";
                   }}
-                  style={{
-                    width: "100%",
-                    height: "250px",
-                    objectFit: "cover",
-                    borderRadius: "0.5rem",
-                  }}
+                  className="book-cover"
                   alt={book.title}
                 />
               </div>
@@ -133,12 +126,19 @@ const BooksSection = ({
               <Card.Body className="d-flex flex-column justify-content-between">
                 <div>
                   <Card.Title className="book-title">{book.title}</Card.Title>
-                  <Card.Text className="book-info">
-                    <strong>Autor:</strong> {book.author?.name || "Desconocido"}
-                    <br />
-                    <strong>Stock:</strong> {book.stock}
+                  <Card.Text className="book-info d-flex flex-column">
+                    <span className="book-author">
+                      {book.author?.name || "Desconocido"}
+                    </span>
+                    <span className="book-stock">
+                      Stock:{" "}
+                      <span style={{ color: "#A08FE2", fontWeight: "bold" }}>
+                        {book.stock > 0 ? book.stock : "Sin stock"}
+                      </span>
+                    </span>
                   </Card.Text>
                 </div>
+
                 <Button
                   className="ver-button mt-auto"
                   onClick={() => (window.location.href = `/books/${book.id}`)}
@@ -146,6 +146,9 @@ const BooksSection = ({
                     backgroundColor: "#1DB5BE",
                     borderRadius: "10px",
                     border: "none",
+                    color: "#000",
+                    fontWeight: "bold",
+                    fontSize: "15px",
                   }}
                 >
                   Ver

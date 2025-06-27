@@ -1,17 +1,17 @@
+import { useContext } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
-const PrivateRoute = ({ user, role }) => {
-  // Si no hay usuario, lo mandamos a login
-  if (!user) {
-    return <Navigate to="/login" replace />;
+const PrivateRoute = ({ role }) => {
+  const { user, checkingAuth } = useContext(AuthContext);
+
+  if (checkingAuth) {
+    return <p className="text-center mt-5">Verificando sesión...</p>;
   }
 
-  // Si el usuario existe pero no tiene el rol adecuado
-  if (role && user.role !== role) {
-    return <Navigate to="/" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
+  if (role && user.role !== role) return <Navigate to="/" replace />;
 
-  // Si todo bien, renderiza las rutas hijas
   return <Outlet />;
 };
 

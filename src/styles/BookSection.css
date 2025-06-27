@@ -3,42 +3,63 @@
 .book-card {
   font-family: "Montserrat", sans-serif;
   font-size: 12px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 10px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px;
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s ease;
 }
 
-.card-body {
+.book-card:hover {
+  transform: translateY(-3px);
+}
+
+.cover-wrapper {
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  padding-bottom: 8px;
-}
-
-.book-card .card-body {
-  padding-top: 8px;
-  padding-bottom: 6px;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
 }
 
 .book-cover {
-  height: 250px;
+  height: 180px;
+  width: 120px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
+  max-width: 100%;
 }
 
 .book-title {
-  font-weight: 700 !important;
-  font-size: 20px;
-  font-family: "Montserrat", sans-serif;
-  margin-top: 8px;
-  margin-bottom: 6px;
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 12px;
+  margin-bottom: 10px;
+  color: #000;
+  line-height: 1.2;
+  min-height: 48px;
+  text-align: left;
+  overflow-wrap: break-word;
 }
 
 .book-info {
   font-size: 14px;
-  padding-bottom: 8px;
+  text-align: left;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  min-height: 50px;
+}
+
+.book-author {
+  font-weight: 500;
+  color: #333;
+}
+
+.book-stock {
+  margin-top: 2px;
+  font-weight: 500;
+  color: #333;
 }
 
 .ver-button {
@@ -47,7 +68,7 @@
   border: none;
   font-size: 15px;
   width: 100%;
-  border-radius: 5px;
+  border-radius: 8px;
   color: #000000;
   margin-top: auto;
 }

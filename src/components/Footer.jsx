@@ -6,7 +6,6 @@ function Footer() {
     <footer className="bg-black text-white py-5">
       <Container>
         <Row className="mb-4">
-          {/* Sección 1 */}
           <Col md={3} className="mb-4 mb-md-0 text-center">
             <img
               src="/src/assets/logo1.png"
@@ -35,7 +34,6 @@ function Footer() {
             </div>
           </Col>
 
-          {/* Sección 2 */}
           <Col md={3} className="mb-4 mb-md-0">
             <h5 className="mb-3">CONTACTO</h5>
             <p>
@@ -56,7 +54,6 @@ function Footer() {
             </p>
           </Col>
 
-          {/* Sección 3 */}
           <Col md={3} className="mb-4 mb-md-0">
             <h5 className="mb-3">SERVICIO AL CLIENTE</h5>
             <ul className="list-unstyled">
@@ -83,7 +80,6 @@ function Footer() {
             </ul>
           </Col>
 
-          {/* Sección 4 */}
           <Col md={3}>
             <h5 className="mb-3">SOBRE NOSOTROS</h5>
             <ul className="list-unstyled">

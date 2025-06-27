@@ -1,3 +1,99 @@
+.book-card {
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-3px);
+}
+
+.cover-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.book-cover {
+  height: 180px;
+  width: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  max-width: 100%;
+}
+
+.book-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 12px;
+  margin-bottom: 10px;
+  color: #000;
+  line-height: 1.2;
+  min-height: 48px;
+  text-align: left;
+  overflow-wrap: break-word;
+}
+
+.book-info {
+  font-size: 14px;
+  text-align: left;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  min-height: 50px;
+}
+
+.book-author {
+  font-weight: 500;
+  color: #333;
+}
+
+.book-stock {
+  margin-top: 2px;
+  font-weight: 500;
+  color: #333;
+}
+
+.ver-button {
+  font-weight: 700 !important;
+  background-color: #1db5be;
+  border: none;
+  font-size: 15px;
+  width: 100%;
+  border-radius: 8px;
+  color: #000000;
+  margin-top: auto;
+}
+
+.favorite-icon {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  width: 42px;
+  height: 42px;
+  background-color: #1db5be;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 3;
+  transition: transform 0.2s;
+}
+
+.favorite-icon:hover {
+  transform: scale(1.1);
+}
+
 .book-detail-bg {
   background-color: #d5fafc;
   min-height: calc(100vh - 100px);

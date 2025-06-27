@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Modal } from "react-bootstrap";
+import { Card, Button, Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/BookDetail.css";
-import BooksSection from "../components/BooksSection";
 
 const BookDetail = () => {
   const { id } = useParams();
   const [book, setBook] = useState(null);
+  const [relatedBooks, setRelatedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -31,6 +31,21 @@ const BookDetail = () => {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!book) return;
+    fetch(`${API_URL}/books/available`)
+      .then((res) => res.json())
+      .then((data) => {
+        const filtered = data.filter(
+          (b) => b.category_id === book.category_id && b.id !== book.id
+        );
+        setRelatedBooks(filtered.slice(0, 6));
+      })
+      .catch((err) =>
+        console.error("Error al obtener libros relacionados:", err)
+      );
+  }, [book]);
 
   const solicitarPrestamo = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -69,6 +84,13 @@ const BookDetail = () => {
         return;
       }
 
+      if (book.stock <= 0) {
+        setModalMessage("Este libro no tiene stock disponible.");
+        setShowModal(true);
+        setTimeout(() => setShowModal(false), 3000);
+        return;
+      }
+
       const postRes = await fetch(`${API_URL}/loans`, {
         method: "POST",
         headers: {
@@ -81,8 +103,9 @@ const BookDetail = () => {
       if (!postRes.ok) throw new Error("Error al registrar el préstamo");
 
       setModalMessage(
-        "Tu solicitud ha sido registrada con éxito. Será evaluada pronto.\n\nSerás redirigido al inicio en unos segundos."
+        "Has sido aprobado exitosamente para el préstamo del libro.\n\nPuedes recogerlo en la biblioteca física. Serás redirigido al inicio en unos segundos."
       );
+
       setShowModal(true);
       setTimeout(() => {
         setShowModal(false);
@@ -96,12 +119,7 @@ const BookDetail = () => {
     }
   };
 
-  const handleAgregarAFavoritos = async (
-    bookId,
-    setModalMessage,
-    setShowModal,
-    navigate
-  ) => {
+  const handleAgregarAFavoritos = async (bookId) => {
     const user = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
 
@@ -156,17 +174,13 @@ const BookDetail = () => {
             <div className="row justify-content-center">
               <div className="col-md-4 text-center">
                 <img
-                  src={
-                    book.cover_image_url
-                      ? book.cover_image_url
-                      : `/books/card${book.id}.webp?${Date.now()}`
-                  }
-                  alt={book.title}
-                  className="img-fluid rounded mb-4 book-image"
+                  src={`/books/card${book.id}.webp?${book.id}`}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = "/books/sin-portada.webp";
+                    e.target.src = "/books/default.webp";
                   }}
+                  alt={book.title}
+                  className="img-fluid rounded mb-4 book-image"
                 />
 
                 <div className="text-start px-3">
@@ -188,7 +202,7 @@ const BookDetail = () => {
                     <span>
                       <strong>Editorial:</strong>
                     </span>
-                    <span>{book.editorial || "Desconocida"}</span>
+                    <span>{book.publisher || "Desconocida"}</span>
                   </div>
                   <hr />
                   <div className="book-info-line">
@@ -239,14 +253,7 @@ const BookDetail = () => {
                 <div
                   className="d-flex align-items-center mb-4"
                   style={{ marginTop: "1rem", cursor: "pointer" }}
-                  onClick={() =>
-                    handleAgregarAFavoritos(
-                      book.id,
-                      setModalMessage,
-                      setShowModal,
-                      navigate
-                    )
-                  }
+                  onClick={() => handleAgregarAFavoritos(book.id)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -259,38 +266,13 @@ const BookDetail = () => {
                     <path d="M1 8.475q0-2.35 1.575-3.912T6.5 3q1.3 0 2.475.55T11 5.1q.85-1 2.025-1.55T15.5 3q1.775 0 3.05.888t1.925 2.287q.175.375.025.763t-.525.562t-.763.025T18.65 7q-.45-1-1.325-1.5T15.5 5q-1.15 0-2.1.65t-1.65 1.6q-.125.2-.325.288T11 7.624t-.425-.1t-.325-.275q-.7-.95-1.65-1.6T6.5 5q-1.425 0-2.462.988T3 8.474q0 .825.35 1.675t1.25 1.963t2.45 2.6T11 18.3l2.225-1.95q.3-.275.7-.25t.675.3q.3.3.288.738t-.338.712l-2.225 1.975q-.275.25-.625.375t-.7.125t-.7-.125t-.625-.4q-1.125-1-2.612-2.275t-2.838-2.737t-2.287-3.063T1 8.475Z" />
                     <path d="M18 14h-2q-.425 0-.712-.288T15 13t.288-.712T16 12h2v-2q0-.425.288-.712T19 9t.713.288T20 10v2h2q.425 0 .713.288T23 13t-.288.713T22 14h-2v2q0 .425-.288.713T19 17t-.712-.288T18 16z" />
                   </svg>
-
                   <span className="fw-semibold">Agregar a mis favoritos</span>
                 </div>
 
                 <div style={{ marginTop: "2rem" }}>
                   <h5 className="sinopsis-title">Sinopsis:</h5>
                   <div className="sinopsis-text">
-                    <p>
-                      En un rincón olvidado del mundo, donde la magia era
-                      considerada un mito y los antiguos textos yacían cubiertos
-                      de polvo, un joven bibliotecario encuentra un manuscrito
-                      sellado que cambiará su vida para siempre.
-                    </p>
-                    <p>
-                      Lo que comienza como una simple curiosidad se convierte en
-                      una carrera contrarreloj para descifrar secretos
-                      milenarios, enfrentar criaturas de sombras y revivir un
-                      poder que podría restaurar el equilibrio de un reino
-                      dividido por el odio y la ambición.
-                    </p>
-                    <p>
-                      Acompañado por una valiente cartógrafa y un misterioso
-                      guardián del bosque, el protagonista recorrerá paisajes
-                      épicos, enfrentará dilemas morales y descubrirá que el
-                      verdadero poder no reside en lo que se hereda, sino en lo
-                      que se elige proteger.
-                    </p>
-                    <p>
-                      Esta historia épica te atrapará desde el primer capítulo y
-                      te dejará reflexionando mucho después de haber leído la
-                      última página.
-                    </p>
+                    <p>{book.synopsis || "Sin sinopsis disponible."}</p>
                   </div>
                 </div>
               </div>
@@ -299,15 +281,84 @@ const BookDetail = () => {
         </div>
       </div>
 
-      <BooksSection
-        title="ARTÍCULOS RELACIONADOS"
-        limit={6}
-        ads={[
-          "/src/assets/Img/anuncio4.webp",
-          "/src/assets/Img/anuncio5.webp",
-          "/src/assets/Img/anuncio6.webp",
-        ]}
-      />
+      {relatedBooks.length > 0 && (
+        <div className="container mt-5">
+          <h4 className="mb-4 fw-semibold">Artículos Relacionados</h4>
+          <div className="row">
+            {relatedBooks.map((related) => (
+              <div className="col-6 col-md-4 col-lg-2 mb-4" key={related.id}>
+                <Card className="book-card h-100 position-relative">
+                  <div
+                    className="favorite-icon"
+                    onClick={() => handleAgregarAFavoritos(related.id)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={25}
+                      height={25}
+                      viewBox="0 0 24 24"
+                      fill="black"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M1 8.475q0-2.35 1.575-3.912T6.5 3q1.3 0 2.475.55T11 5.1q.85-1 2.025-1.55T15.5 3q1.775 0 3.05.888t1.925 2.287q.175.375.025.763t-.525.562t-.763.025T18.65 7q-.45-1-1.325-1.5T15.5 5q-1.15 0-2.1.65t-1.65 1.6q-.125.2-.325.288T11 7.624t-.425-.1t-.325-.275q-.7-.95-1.65-1.6T6.5 5q-1.425 0-2.462.988T3 8.474q0 .825.35 1.675t1.25 1.963t2.45 2.6T11 18.3l2.225-1.95q.3-.275.7-.25t.675.3q.3.3.288.738t-.338.712l-2.225 1.975q-.275.25-.625.375t-.7.125t-.7-.125t-.625-.4q-1.125-1-2.612-2.275t-2.838-2.737t-2.287-3.063T1 8.475M18 14h-2q-.425 0-.712-.288T15 13t.288-.712T16 12h2v-2q0-.425.288-.712T19 9t.713.288T20 10v2h2q.425 0 .713.288T23 13t-.288.713T22 14h-2v2q0 .425-.288.713T19 17t-.712-.288T18 16z"
+                      />
+                    </svg>
+                  </div>
+
+                  <div className="cover-wrapper">
+                    <img
+                      src={`/books/card${related.id}.webp?${related.id}`}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/books/default.webp";
+                      }}
+                      className="book-cover"
+                      alt={related.title}
+                    />
+                  </div>
+
+                  <Card.Body className="d-flex flex-column justify-content-between">
+                    <div>
+                      <Card.Title className="book-title">
+                        {related.title}
+                      </Card.Title>
+                      <Card.Text className="book-info d-flex flex-column">
+                        <span className="book-author">
+                          {related.author?.name || "Desconocido"}
+                        </span>
+                        <span className="book-stock">
+                          Stock:{" "}
+                          <span
+                            style={{ color: "#A08FE2", fontWeight: "bold" }}
+                          >
+                            {related.stock > 0 ? related.stock : "Sin stock"}
+                          </span>
+                        </span>
+                      </Card.Text>
+                    </div>
+
+                    <Button
+                      className="ver-button mt-auto"
+                      onClick={() => navigate(`/books/${related.id}`)}
+                      style={{
+                        backgroundColor: "#1DB5BE",
+                        borderRadius: "10px",
+                        border: "none",
+                        color: "#000",
+                        fontWeight: "bold",
+                        fontSize: "15px",
+                      }}
+                    >
+                      Ver
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Modal show={showModal} centered backdrop="static" keyboard={false}>
         <Modal.Body className="text-center p-4">
