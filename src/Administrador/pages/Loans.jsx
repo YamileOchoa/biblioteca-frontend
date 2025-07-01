@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Modal, Button } from "react-bootstrap";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -10,6 +11,9 @@ const Loans = () => {
   const [searchId, setSearchId] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [mensaje, setMensaje] = useState("");
+  const [deleteLoanId, setDeleteLoanId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -70,11 +74,6 @@ const Loans = () => {
   }, []);
 
   const handleMarkReturned = async (loan) => {
-    if (!loan.return_date) {
-      alert("Este préstamo aún no tiene fecha de devolución.");
-      return;
-    }
-
     try {
       const res = await fetch(`${API}/loans/${loan.id}`, {
         method: "PUT",
@@ -84,11 +83,7 @@ const Loans = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: loan.user_id,
-          book_id: loan.book_id,
-          loan_date: loan.loan_date,
-          return_date: loan.return_date,
-          status: "aprobado",
+          return_date: new Date().toISOString().split("T")[0],
         }),
       });
 
@@ -99,7 +94,7 @@ const Loans = () => {
 
       if (res.ok) {
         fetchLoans();
-        setMensaje("Préstamo devuelto correctamente.");
+        setMensaje("📘 Préstamo marcado como devuelto.");
         setTimeout(() => setMensaje(""), 3000);
       } else {
         alert("Error al marcar como devuelto.");
@@ -109,19 +104,23 @@ const Loans = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Eliminar este préstamo?")) return;
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`${API}/loans/${deleteLoanId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
 
-    const res = await fetch(`${API}/loans/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-
-    if (res.ok) fetchLoans();
-    else if (res.status === 401) navigate("/login");
+      if (res.ok) {
+        fetchLoans();
+        setDeleteLoanId(null);
+      } else if (res.status === 401) navigate("/login");
+    } catch (err) {
+      console.error("Error al eliminar préstamo:", err);
+    }
   };
 
   const handleSearch = async () => {
@@ -138,6 +137,7 @@ const Loans = () => {
       if (res.ok) {
         const data = await res.json();
         setSearchResult(data);
+        setCurrentPage(1);
       } else {
         setSearchResult(null);
         alert("Préstamo no encontrado.");
@@ -150,7 +150,14 @@ const Loans = () => {
   const handleClearSearch = () => {
     setSearchId("");
     setSearchResult(null);
+    setCurrentPage(1);
   };
+
+  const paginatedLoans = searchResult
+    ? [searchResult]
+    : loans.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const totalPages = Math.ceil(loans.length / itemsPerPage);
 
   return (
     <div
@@ -213,7 +220,7 @@ const Loans = () => {
             </tr>
           </thead>
           <tbody>
-            {(searchResult ? [searchResult] : loans).map((loan) => (
+            {paginatedLoans.map((loan) => (
               <tr key={loan.id} className="text-center align-middle">
                 <td>{loan.id}</td>
                 <td>{usersMap[loan.user_id] || `ID ${loan.user_id}`}</td>
@@ -227,26 +234,15 @@ const Loans = () => {
                 <td>{loan.status}</td>
                 <td>
                   <div className="d-flex justify-content-center gap-2 flex-wrap">
-                    {loan.status === "pendiente" && (
+                    {loan.status === "aprobado" && !loan.return_date && (
                       <button
                         className="btn btn-sm"
                         style={{
-                          backgroundColor: loan.return_date
-                            ? "#198754"
-                            : "#ccc",
+                          backgroundColor: "#198754",
                           color: "#fff",
                           fontWeight: "500",
-                          cursor: loan.return_date ? "pointer" : "not-allowed",
                         }}
-                        onClick={() =>
-                          loan.return_date && handleMarkReturned(loan)
-                        }
-                        disabled={!loan.return_date}
-                        title={
-                          loan.return_date
-                            ? "Marcar préstamo como devuelto"
-                            : "No puedes marcar como devuelto sin una fecha de devolución"
-                        }
+                        onClick={() => handleMarkReturned(loan)}
                       >
                         Marcar Devuelto
                       </button>
@@ -258,7 +254,7 @@ const Loans = () => {
                         color: "#fff",
                         fontWeight: "500",
                       }}
-                      onClick={() => handleDelete(loan.id)}
+                      onClick={() => setDeleteLoanId(loan.id)}
                     >
                       Eliminar
                     </button>
@@ -276,6 +272,54 @@ const Loans = () => {
           </tbody>
         </table>
       </div>
+
+      {!searchResult && totalPages > 1 && (
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <Button
+            variant="outline-primary"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            ← Anterior
+          </Button>
+          <span>
+            Página {currentPage} de {totalPages}
+          </span>
+          <Button
+            variant="outline-primary"
+            onClick={() =>
+              setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Siguiente →
+          </Button>
+        </div>
+      )}
+
+      <Modal
+        show={deleteLoanId !== null}
+        onHide={() => setDeleteLoanId(null)}
+        centered
+      >
+        <Modal.Header
+          closeButton
+          style={{ backgroundColor: "#1F3A63", color: "white" }}
+        >
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          ¿Estás seguro de que deseas eliminar este préstamo?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setDeleteLoanId(null)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <style>
         {`

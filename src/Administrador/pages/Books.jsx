@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BookForm from "../components/BookForm";
-import { Modal } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -12,10 +12,12 @@ const Books = () => {
   const [mensaje, setMensaje] = useState("");
   const [showDetail, setShowDetail] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
-
   const [searchId, setSearchId] = useState("");
   const [searchResult, setSearchResult] = useState(null);
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 10;
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -44,11 +46,14 @@ const Books = () => {
 
   useEffect(fetchBooks, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Eliminar este libro?")) return;
+  const handleDelete = (book) => {
+    setBookToDelete(book);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDelete = async () => {
     try {
-      const res = await fetch(`${API}/books/${id}`, {
+      const res = await fetch(`${API}/books/${bookToDelete.id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -68,6 +73,9 @@ const Books = () => {
       }
     } catch (err) {
       console.error("Error al eliminar libro:", err);
+    } finally {
+      setShowDeleteModal(false);
+      setBookToDelete(null);
     }
   };
 
@@ -98,6 +106,13 @@ const Books = () => {
     setSearchId("");
     setSearchResult(null);
   };
+
+  const totalPages = Math.ceil(books.length / booksPerPage);
+  const indexOfLastBook = currentPage * booksPerPage;
+  const indexOfFirstBook = indexOfLastBook - booksPerPage;
+  const currentBooks = searchResult
+    ? [searchResult]
+    : books.slice(indexOfFirstBook, indexOfLastBook);
 
   return (
     <div
@@ -226,7 +241,7 @@ const Books = () => {
             </tr>
           </thead>
           <tbody>
-            {(searchResult ? [searchResult] : books).map((book) => (
+            {currentBooks.map((book) => (
               <tr key={book.id} className="text-center align-middle">
                 <td>{book.id}</td>
                 <td>{book.title}</td>
@@ -270,7 +285,7 @@ const Books = () => {
                         color: "#fff",
                         fontWeight: "500",
                       }}
-                      onClick={() => handleDelete(book.id)}
+                      onClick={() => handleDelete(book)}
                     >
                       Eliminar
                     </button>
@@ -281,6 +296,30 @@ const Books = () => {
           </tbody>
         </table>
       </div>
+
+      {!searchResult && (
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <Button
+            variant="outline-primary"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            ← Anterior
+          </Button>
+          <span>
+            Página {currentPage} de {totalPages}
+          </span>
+          <Button
+            variant="outline-primary"
+            onClick={() =>
+              setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Siguiente →
+          </Button>
+        </div>
+      )}
 
       {showDetail && selectedBook && (
         <Modal
@@ -311,7 +350,7 @@ const Books = () => {
             <div className="row">
               <div className="col-md-4 text-center mb-3">
                 <img
-                  src={`/books/card${selectedBook.id}.webp`}
+                  src={selectedBook.cover_image_url || "/books/default.webp"}
                   alt={selectedBook.title}
                   style={{
                     width: "100%",
@@ -321,6 +360,7 @@ const Books = () => {
                     border: "1px solid #ccc",
                   }}
                   onError={(e) => {
+                    e.target.onerror = null;
                     e.target.src = "/books/default.webp";
                   }}
                 />
@@ -367,6 +407,24 @@ const Books = () => {
           </Modal.Body>
         </Modal>
       )}
+
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          ¿Estás segura/o que deseas eliminar el libro "
+          <strong>{bookToDelete?.title}</strong>"?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <style>
         {`

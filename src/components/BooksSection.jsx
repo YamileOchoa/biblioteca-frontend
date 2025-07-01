@@ -113,7 +113,7 @@ const BooksSection = ({ title, ads = [], limit = 12 }) => {
 
               <div className="cover-wrapper">
                 <img
-                  src={`/books/card${book.id}.webp?${book.id}`}
+                  src={book.cover_image_url || "/books/default.webp"}
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "/books/default.webp";

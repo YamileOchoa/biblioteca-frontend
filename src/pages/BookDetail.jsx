@@ -174,7 +174,7 @@ const BookDetail = () => {
             <div className="row justify-content-center">
               <div className="col-md-4 text-center">
                 <img
-                  src={`/books/card${book.id}.webp?${book.id}`}
+                  src={book.cover_image_url || "/books/default.webp"}
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "/books/default.webp";
@@ -282,82 +282,102 @@ const BookDetail = () => {
       </div>
 
       {relatedBooks.length > 0 && (
-        <div className="container mt-5">
-          <h4 className="mb-4 fw-semibold">Artículos Relacionados</h4>
-          <div className="row">
-            {relatedBooks.map((related) => (
-              <div className="col-6 col-md-4 col-lg-2 mb-4" key={related.id}>
-                <Card className="book-card h-100 position-relative">
-                  <div
-                    className="favorite-icon"
-                    onClick={() => handleAgregarAFavoritos(related.id)}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width={25}
-                      height={25}
-                      viewBox="0 0 24 24"
-                      fill="black"
+        <>
+          <div className="container mt-5">
+            <h4 className="mb-4 fw-semibold">Artículos Relacionados</h4>
+            <div className="row">
+              {relatedBooks.map((related) => (
+                <div className="col-6 col-md-4 col-lg-2 mb-4" key={related.id}>
+                  <Card className="book-card h-100 position-relative">
+                    <div
+                      className="favorite-icon"
+                      onClick={() => handleAgregarAFavoritos(related.id)}
                     >
-                      <path
-                        fill="currentColor"
-                        d="M1 8.475q0-2.35 1.575-3.912T6.5 3q1.3 0 2.475.55T11 5.1q.85-1 2.025-1.55T15.5 3q1.775 0 3.05.888t1.925 2.287q.175.375.025.763t-.525.562t-.763.025T18.65 7q-.45-1-1.325-1.5T15.5 5q-1.15 0-2.1.65t-1.65 1.6q-.125.2-.325.288T11 7.624t-.425-.1t-.325-.275q-.7-.95-1.65-1.6T6.5 5q-1.425 0-2.462.988T3 8.474q0 .825.35 1.675t1.25 1.963t2.45 2.6T11 18.3l2.225-1.95q.3-.275.7-.25t.675.3q.3.3.288.738t-.338.712l-2.225 1.975q-.275.25-.625.375t-.7.125t-.7-.125t-.625-.4q-1.125-1-2.612-2.275t-2.838-2.737t-2.287-3.063T1 8.475M18 14h-2q-.425 0-.712-.288T15 13t.288-.712T16 12h2v-2q0-.425.288-.712T19 9t.713.288T20 10v2h2q.425 0 .713.288T23 13t-.288.713T22 14h-2v2q0 .425-.288.713T19 17t-.712-.288T18 16z"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className="cover-wrapper">
-                    <img
-                      src={`/books/card${related.id}.webp?${related.id}`}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/books/default.webp";
-                      }}
-                      className="book-cover"
-                      alt={related.title}
-                    />
-                  </div>
-
-                  <Card.Body className="d-flex flex-column justify-content-between">
-                    <div>
-                      <Card.Title className="book-title">
-                        {related.title}
-                      </Card.Title>
-                      <Card.Text className="book-info d-flex flex-column">
-                        <span className="book-author">
-                          {related.author?.name || "Desconocido"}
-                        </span>
-                        <span className="book-stock">
-                          Stock:{" "}
-                          <span
-                            style={{ color: "#A08FE2", fontWeight: "bold" }}
-                          >
-                            {related.stock > 0 ? related.stock : "Sin stock"}
-                          </span>
-                        </span>
-                      </Card.Text>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width={25}
+                        height={25}
+                        viewBox="0 0 24 24"
+                        fill="black"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M1 8.475q0-2.35 1.575-3.912T6.5 3q1.3 0 2.475.55T11 5.1q.85-1 2.025-1.55T15.5 3q1.775 0 3.05.888t1.925 2.287q.175.375.025.763t-.525.562t-.763.025T18.65 7q-.45-1-1.325-1.5T15.5 5q-1.15 0-2.1.65t-1.65 1.6q-.125.2-.325.288T11 7.624t-.425-.1t-.325-.275q-.7-.95-1.65-1.6T6.5 5q-1.425 0-2.462.988T3 8.474q0 .825.35 1.675t1.25 1.963t2.45 2.6T11 18.3l2.225-1.95q.3-.275.7-.25t.675.3q.3.3.288.738t-.338.712l-2.225 1.975q-.275.25-.625.375t-.7.125t-.7-.125t-.625-.4q-1.125-1-2.612-2.275t-2.838-2.737t-2.287-3.063T1 8.475M18 14h-2q-.425 0-.712-.288T15 13t.288-.712T16 12h2v-2q0-.425.288-.712T19 9t.713.288T20 10v2h2q.425 0 .713.288T23 13t-.288.713T22 14h-2v2q0 .425-.288.713T19 17t-.712-.288T18 16z"
+                        />
+                      </svg>
                     </div>
 
-                    <Button
-                      className="ver-button mt-auto"
-                      onClick={() => navigate(`/books/${related.id}`)}
-                      style={{
-                        backgroundColor: "#1DB5BE",
-                        borderRadius: "10px",
-                        border: "none",
-                        color: "#000",
-                        fontWeight: "bold",
-                        fontSize: "15px",
-                      }}
-                    >
-                      Ver
-                    </Button>
-                  </Card.Body>
-                </Card>
-              </div>
-            ))}
+                    <div className="cover-wrapper">
+                      <img
+                        src={related.cover_image_url || "/books/default.webp"}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/books/default.webp";
+                        }}
+                        className="book-cover"
+                        alt={related.title}
+                      />
+                    </div>
+
+                    <Card.Body className="d-flex flex-column justify-content-between">
+                      <div>
+                        <Card.Title className="book-title">
+                          {related.title}
+                        </Card.Title>
+                        <Card.Text className="book-info d-flex flex-column">
+                          <span className="book-author">
+                            {related.author?.name || "Desconocido"}
+                          </span>
+                          <span className="book-stock">
+                            Stock:{" "}
+                            <span
+                              style={{ color: "#A08FE2", fontWeight: "bold" }}
+                            >
+                              {related.stock > 0 ? related.stock : "Sin stock"}
+                            </span>
+                          </span>
+                        </Card.Text>
+                      </div>
+
+                      <Button
+                        className="ver-button mt-auto"
+                        onClick={() => navigate(`/books/${related.id}`)}
+                        style={{
+                          backgroundColor: "#1DB5BE",
+                          borderRadius: "10px",
+                          border: "none",
+                          color: "#000",
+                          fontWeight: "bold",
+                          fontSize: "15px",
+                        }}
+                      >
+                        Ver
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+
+          <div className="container mt-4 mb-5">
+            <div className="row">
+              {[
+                "/src/assets/Img/anuncio4.webp",
+                "/src/assets/Img/anuncio5.webp",
+                "/src/assets/Img/anuncio6.webp",
+              ].map((src, index) => (
+                <div key={index} className="col-12 col-md-4 mb-3">
+                  <img
+                    src={src}
+                    alt={`Anuncio ${index + 1}`}
+                    className="img-fluid rounded shadow-sm w-100"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       <Modal show={showModal} centered backdrop="static" keyboard={false}>

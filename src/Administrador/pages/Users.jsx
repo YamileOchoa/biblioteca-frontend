@@ -10,6 +10,10 @@ const Users = () => {
   const [editUser, setEditUser] = useState(null);
   const [searchId, setSearchId] = useState("");
   const [filteredUser, setFilteredUser] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10;
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -38,19 +42,33 @@ const Users = () => {
 
   useEffect(fetchUsers, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Eliminar este usuario?")) return;
+  const handleDelete = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
 
-    const res = await fetch(`${API}/users/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+    try {
+      const res = await fetch(`${API}/users/${userToDelete.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
 
-    if (res.ok) fetchUsers();
-    else if (res.status === 401) navigate("/login");
+      if (res.ok) {
+        fetchUsers();
+      } else if (res.status === 401) {
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error("Error al eliminar usuario:", err);
+    } finally {
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+    }
   };
 
   const handleSearch = async () => {
@@ -103,6 +121,13 @@ const Users = () => {
       alert(error.message);
     }
   };
+
+  const totalPages = Math.ceil(users.length / usersPerPage);
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUser
+    ? [filteredUser]
+    : users.slice(indexOfFirstUser, indexOfLastUser);
 
   return (
     <div
@@ -162,7 +187,7 @@ const Users = () => {
             </tr>
           </thead>
           <tbody>
-            {(filteredUser ? [filteredUser] : users).map((u) => (
+            {currentUsers.map((u) => (
               <tr key={u.id} className="text-center align-middle">
                 <td>{u.id}</td>
                 <td>{u.name}</td>
@@ -201,7 +226,7 @@ const Users = () => {
                         color: "#fff",
                         fontWeight: "500",
                       }}
-                      onClick={() => handleDelete(u.id)}
+                      onClick={() => handleDelete(u)}
                     >
                       Eliminar
                     </button>
@@ -209,39 +234,33 @@ const Users = () => {
                 </td>
               </tr>
             ))}
-            {!filteredUser && users.length === 0 && (
-              <tr>
-                <td colSpan="7" className="text-center">
-                  No hay usuarios registrados
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
 
-      <style>
-        {`
-          .table-hover tbody tr:hover {
-            background-color: #f0f5ff;
-          }
-          .table-bordered th, .table-bordered td {
-            border-color: #cdd7e1 !important;
-          }
-          @media (max-width: 576px) {
-            h2 {
-              font-size: 1.5rem;
-              text-align: center;
+      {!filteredUser && (
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <Button
+            variant="outline-primary"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            ← Anterior
+          </Button>
+          <span>
+            Página {currentPage} de {totalPages}
+          </span>
+          <Button
+            variant="outline-primary"
+            onClick={() =>
+              setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))
             }
-            .btn {
-              width: 100%;
-            }
-            .form-control {
-              width: 100%;
-            }
-          }
-        `}
-      </style>
+            disabled={currentPage === totalPages}
+          >
+            Siguiente →
+          </Button>
+        </div>
+      )}
 
       {selectedUser && (
         <Modal show onHide={() => setSelectedUser(null)} centered>
@@ -342,6 +361,28 @@ const Users = () => {
           </Form>
         </Modal>
       )}
+
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Advertencia importante</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          ¿Estás segura/o que deseas eliminar al usuario{" "}
+          <strong>{userToDelete?.name}</strong>?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

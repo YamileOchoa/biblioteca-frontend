@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthorForm from "../components/AuthorForm";
-import { Modal } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 
 const API = import.meta.env.VITE_API_URL;
 
 const Authors = () => {
   const [authors, setAuthors] = useState([]);
-  const [filteredAuthors, setFilteredAuthors] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [authorToEdit, setAuthorToEdit] = useState(null);
-  const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [searchId, setSearchId] = useState("");
+  const [searchResult, setSearchResult] = useState(null);
+  const [mensaje, setMensaje] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [authorToDelete, setAuthorToDelete] = useState(null);
+  const [selectedAuthor, setSelectedAuthor] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const authorsPerPage = 10;
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -34,20 +39,20 @@ const Authors = () => {
         }
         return res.json();
       })
-      .then((data) => {
-        setAuthors(data);
-        setFilteredAuthors(data);
-      })
+      .then(setAuthors)
       .catch((err) => console.error("Error cargando autores:", err));
   };
 
   useEffect(fetchAuthors, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Eliminar este autor?")) return;
+  const handleDelete = (author) => {
+    setAuthorToDelete(author);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDelete = async () => {
     try {
-      const res = await fetch(`${API}/authors/${id}`, {
+      const res = await fetch(`${API}/authors/${authorToDelete.id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,34 +65,53 @@ const Authors = () => {
         return;
       }
 
-      if (res.ok) fetchAuthors();
+      if (res.ok) {
+        fetchAuthors();
+        setMensaje("Autor eliminado con éxito");
+        setTimeout(() => setMensaje(""), 3000);
+      }
     } catch (err) {
       console.error("Error al eliminar autor:", err);
+    } finally {
+      setShowDeleteModal(false);
+      setAuthorToDelete(null);
     }
   };
 
-  const handleCloseModal = () => setSelectedAuthor(null);
+  const handleSearch = async () => {
+    if (!searchId.trim()) return;
 
-  const handleSearch = () => {
-    if (!searchId) return;
-    fetch(`${API}/authors/${searchId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Autor no encontrado");
-      })
-      .then((author) => setFilteredAuthors([author]))
-      .catch(() => setFilteredAuthors([]));
+    try {
+      const res = await fetch(`${API}/authors/${searchId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResult(data);
+      } else {
+        setSearchResult(null);
+        alert("Autor no encontrado.");
+      }
+    } catch (err) {
+      console.error("Error al buscar autor:", err);
+    }
   };
 
   const handleClearSearch = () => {
     setSearchId("");
-    setFilteredAuthors(authors);
+    setSearchResult(null);
   };
+
+  const totalPages = Math.ceil(authors.length / authorsPerPage);
+  const indexOfLastAuthor = currentPage * authorsPerPage;
+  const indexOfFirstAuthor = indexOfLastAuthor - authorsPerPage;
+  const currentAuthors = searchResult
+    ? [searchResult]
+    : authors.slice(indexOfFirstAuthor, indexOfLastAuthor);
 
   return (
     <div
@@ -97,18 +121,12 @@ const Authors = () => {
         padding: "2rem",
       }}
     >
-      <h2
-        style={{
-          color: "#10274C",
-          fontWeight: "600",
-          marginBottom: "2rem",
-        }}
-      >
+      <h2 style={{ color: "#10274C", fontWeight: "600", marginBottom: "2rem" }}>
         Gestión de Autores
       </h2>
 
-      <div className="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
-        <div className="d-flex gap-2 align-items-center">
+      <div className="d-flex justify-content-between align-items-end mb-4 flex-wrap">
+        <div className="d-flex gap-2 align-items-center mb-2 mb-md-0">
           <input
             type="number"
             placeholder="Buscar por ID"
@@ -119,6 +137,7 @@ const Authors = () => {
           />
           <button
             className="btn"
+            type="button"
             style={{
               backgroundColor: "#1F3A63",
               color: "#fff",
@@ -130,6 +149,7 @@ const Authors = () => {
           </button>
           <button
             className="btn btn-outline-secondary"
+            type="button"
             onClick={handleClearSearch}
             title="Limpiar búsqueda"
           >
@@ -137,35 +157,46 @@ const Authors = () => {
           </button>
         </div>
 
-        <div>
-          {!showForm ? (
-            <button
-              className="btn"
-              style={{
-                backgroundColor: "#1F3A63",
-                color: "#fff",
-                fontWeight: "500",
-              }}
-              onClick={() => {
-                setAuthorToEdit(null);
-                setShowForm(true);
-              }}
-            >
-              Nuevo autor
-            </button>
-          ) : (
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => {
-                setAuthorToEdit(null);
-                setShowForm(false);
-              }}
-            >
-              Cancelar
-            </button>
-          )}
-        </div>
+        {!showForm ? (
+          <button
+            className="btn"
+            style={{
+              backgroundColor: "#1F3A63",
+              color: "#fff",
+              fontWeight: "500",
+            }}
+            onClick={() => {
+              setAuthorToEdit(null);
+              setShowForm(true);
+            }}
+          >
+            Nuevo autor
+          </button>
+        ) : (
+          <button
+            className="btn btn-outline-secondary"
+            onClick={() => {
+              setAuthorToEdit(null);
+              setShowForm(false);
+            }}
+          >
+            Cancelar
+          </button>
+        )}
       </div>
+
+      {mensaje && (
+        <div
+          className="alert alert-success"
+          style={{
+            borderColor: "#10274C",
+            backgroundColor: "#eaf1ff",
+            color: "#10274C",
+          }}
+        >
+          {mensaje}
+        </div>
+      )}
 
       {showForm && (
         <AuthorForm
@@ -174,6 +205,8 @@ const Authors = () => {
             fetchAuthors();
             setShowForm(false);
             setAuthorToEdit(null);
+            setMensaje("Autor guardado con éxito");
+            setTimeout(() => setMensaje(""), 3000);
           }}
           onCancel={() => {
             setShowForm(false);
@@ -183,13 +216,7 @@ const Authors = () => {
       )}
 
       <div className="table-responsive">
-        <table
-          className="table table-bordered table-hover table-striped"
-          style={{
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
+        <table className="table table-bordered table-hover table-striped">
           <thead style={{ backgroundColor: "#eaf1ff", color: "#10274C" }}>
             <tr className="text-center">
               <th>ID</th>
@@ -199,11 +226,11 @@ const Authors = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredAuthors.map((a) => (
-              <tr key={a.id} className="text-center align-middle">
-                <td>{a.id}</td>
-                <td>{a.name}</td>
-                <td>{a.country || "No especificado"}</td>
+            {currentAuthors.map((author) => (
+              <tr key={author.id} className="text-center align-middle">
+                <td>{author.id}</td>
+                <td>{author.name}</td>
+                <td>{author.country || "No especificado"}</td>
                 <td>
                   <div className="d-flex justify-content-center gap-2 flex-wrap">
                     <button
@@ -213,7 +240,7 @@ const Authors = () => {
                         color: "#fff",
                         fontWeight: "500",
                       }}
-                      onClick={() => setSelectedAuthor(a)}
+                      onClick={() => setSelectedAuthor(author)}
                     >
                       Detalle
                     </button>
@@ -225,7 +252,7 @@ const Authors = () => {
                         fontWeight: "500",
                       }}
                       onClick={() => {
-                        setAuthorToEdit(a);
+                        setAuthorToEdit(author);
                         setShowForm(true);
                       }}
                     >
@@ -238,7 +265,7 @@ const Authors = () => {
                         color: "#fff",
                         fontWeight: "500",
                       }}
-                      onClick={() => handleDelete(a.id)}
+                      onClick={() => handleDelete(author)}
                     >
                       Eliminar
                     </button>
@@ -250,38 +277,90 @@ const Authors = () => {
         </table>
       </div>
 
-      {selectedAuthor && (
-        <Modal show onHide={handleCloseModal} centered>
-          <Modal.Header
-            closeButton
-            style={{
-              backgroundColor: "#1F3A63",
-              color: "#fff",
-              borderBottom: "none",
-            }}
-            closeVariant="white"
+      {!searchResult && (
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <Button
+            variant="outline-primary"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
           >
-            <Modal.Title style={{ fontWeight: "500" }}>
-              Detalle del Autor
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="px-4 py-3">
-            <p>
-              <strong>Nombre:</strong> {selectedAuthor.name}
-            </p>
-            <p>
-              <strong>País:</strong>{" "}
-              {selectedAuthor.country || "No especificado"}
-            </p>
-            <p>
-              <strong>Biografía:</strong>
-            </p>
-            <p className="text-secondary">
-              {selectedAuthor.bio || "No hay biografía registrada."}
-            </p>
-          </Modal.Body>
-        </Modal>
+            ← Anterior
+          </Button>
+          <span>
+            Página {currentPage} de {totalPages}
+          </span>
+          <Button
+            variant="outline-primary"
+            onClick={() =>
+              setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Siguiente →
+          </Button>
+        </div>
       )}
+
+      {/* Modal detalle del autor */}
+      <Modal
+        show={!!selectedAuthor}
+        onHide={() => setSelectedAuthor(null)}
+        centered
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#1F3A63",
+            color: "#fff",
+            borderBottom: "none",
+          }}
+          closeVariant="white"
+        >
+          <Modal.Title style={{ fontWeight: "500" }}>
+            Detalle del Autor
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="px-4 py-3">
+          <p>
+            <strong>Nombre:</strong> {selectedAuthor?.name}
+          </p>
+          <p>
+            <strong>País:</strong>{" "}
+            {selectedAuthor?.country || "No especificado"}
+          </p>
+          <p>
+            <strong>Biografía:</strong>
+          </p>
+          <p className="text-secondary">
+            {selectedAuthor?.bio || "No hay biografía registrada."}
+          </p>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Advertencia importante</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          ¿Estás segura/o que deseas eliminar al autor{" "}
+          <strong>{authorToDelete?.name}</strong>?<br />
+          <span className="text-danger">
+            Esto también eliminará todos los libros asociados a este autor.
+          </span>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <style>
         {`
