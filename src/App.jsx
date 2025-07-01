@@ -9,6 +9,8 @@ import Home from "./pages/Home";
 import Favorites from "./pages/Favorites";
 import BookDetail from "./pages/BookDetail";
 import PrivateRoute from "./components/ProtectedRoute";
+import AllBooks from "./pages/AllBooks";
+import MyLoans from "./pages/MyLoans";
 
 // Admin
 import AdminLayout from "./Administrador/layouts/AdminLayout";
@@ -35,6 +37,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/books/:id" element={<BookDetail />} />
         <Route path="/favoritos" element={<Favorites />} />
+        <Route path="/libros" element={<AllBooks />} />
+        <Route path="/mis-prestamos" element={<MyLoans />} />
       </Route>
 
       {/* Layout admin protegido */}

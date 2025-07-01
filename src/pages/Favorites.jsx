@@ -27,6 +27,14 @@ export function Favorites() {
         if (!response.ok) throw new Error("Error al obtener favoritos");
 
         const data = await response.json();
+        console.log(
+          "FAVORITOS:",
+          data.map((book) => ({
+            title: book.title,
+            cover_image_url: book.cover_image_url,
+          }))
+        );
+
         setFavorites(data);
       } catch (error) {
         console.error("Error al obtener favoritos:", error);
@@ -85,62 +93,47 @@ export function Favorites() {
         <div className="favorites-list container px-3">
           {favorites.slice(0, visibleCount).map((book) => (
             <div
-              className="favorite-card card shadow-sm mb-4 p-3 mx-auto"
+              className="favorite-card card shadow-sm mb-4 mx-auto"
               key={book.id}
-              style={{
-                maxWidth: "600px",
-                borderRadius: "1rem",
-                transition: "transform 0.3s ease",
-              }}
             >
-              <div className="d-flex justify-content-between">
+              <div className="d-flex gap-3 align-items-start">
                 {/* Portada */}
                 <img
-                  src={
-                    book.cover_image_url ||
-                    `/books/card${book.id}.webp?${Date.now()}`
-                  }
-                  alt={book.title}
-                  style={{
-                    width: "90px",
-                    height: "135px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                  }}
+                  src={book.cover_image_url || "/books/default.webp"}
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = "/books/sin-portada.webp";
+                    e.target.src = "/books/default.webp";
                   }}
+                  className="portada-fav"
+                  alt={book.title}
+                  onClick={() => navigate(`/books/${book.id}`)}
                 />
 
-                <div className="flex-grow-1 ms-3 me-3">
+                {/* Info */}
+                <div className="flex-grow-1">
                   <h5 className="fw-semibold">{book.title}</h5>
                   <p className="mb-1 text-muted">
                     {book.year || "¿Año?"} · {book.pages || "¿?"} páginas
                   </p>
-                  <p
-                    className="text-truncate mb-2"
-                    style={{ maxWidth: "100%", color: "#444" }}
-                  >
-                    {book.synopsis || "Sin sinopsis disponible..."}
+                  <p className="mb-2 text-muted">
+                    Editorial: {book.publisher || "Desconocida"}
                   </p>
-                </div>
+                  <p className="sinopsis-preview">{book.synopsis}</p>
 
-                <div className="d-flex flex-column align-items-end justify-content-center">
-                  <button
-                    className="btn btn-ver mb-2"
-                    style={{ minWidth: "100px" }}
-                    onClick={() => navigate(`/books/${book.id}`)}
-                  >
-                    Ver
-                  </button>
-                  <button
-                    className="btn btn-eliminar"
-                    style={{ minWidth: "100px" }}
-                    onClick={() => eliminarFavorito(book.id)}
-                  >
-                    Eliminar
-                  </button>
+                  <div className="mt-3 d-flex gap-2">
+                    <button
+                      className="btn btn-ver"
+                      onClick={() => navigate(`/books/${book.id}`)}
+                    >
+                      Ver
+                    </button>
+                    <button
+                      className="btn btn-eliminar"
+                      onClick={() => eliminarFavorito(book.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -91,6 +91,8 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
 
       if (res.ok) {
         onSuccess();
+        const data = await res.json();
+        console.log("Libro guardado:", data);
       } else {
         const errorData = await res.json();
         console.error("Error al guardar libro:", errorData);
