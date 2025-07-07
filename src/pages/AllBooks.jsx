@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, Col, Container, Row, Button, Form } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/AllBooks.css";
 
 const AllBooks = () => {
@@ -17,6 +16,7 @@ const AllBooks = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showAllAuthors, setShowAllAuthors] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true); // 🆕 Estado de carga
 
   const token = localStorage.getItem("token");
   const isLoggedIn = !!token;
@@ -34,6 +34,8 @@ const AllBooks = () => {
         setFilteredBooks(data);
       } catch (error) {
         console.error("Error al obtener libros:", error);
+      } finally {
+        setLoading(false); // 🆕 Detener carga
       }
     };
     fetchBooks();
@@ -153,7 +155,6 @@ const AllBooks = () => {
                       <Form.Check
                         key={cat.id}
                         label={cat.name}
-                        value={cat.id}
                         checked={selectedCategories.includes(cat.id)}
                         onChange={() => handleCategoryChange(cat.id)}
                       />
@@ -180,7 +181,6 @@ const AllBooks = () => {
                       <Form.Check
                         key={auth.id}
                         label={auth.name}
-                        value={auth.id}
                         checked={selectedAuthors.includes(auth.id)}
                         onChange={() => handleAuthorChange(auth.id)}
                       />
@@ -202,7 +202,11 @@ const AllBooks = () => {
 
           <Col md={isLoggedIn ? 9 : 12}>
             <div className="books-grid">
-              {filteredBooks.length > 0 ? (
+              {loading ? (
+                <p className="text-center mt-5">Libros cargando...</p>
+              ) : filteredBooks.length === 0 ? (
+                <p className="text-center mt-5">No hay libros disponibles.</p>
+              ) : (
                 filteredBooks.map((book) => (
                   <div className="grid-book" key={book.id}>
                     <Card className="book-card h-100 position-relative">
@@ -248,8 +252,6 @@ const AllBooks = () => {
                     </Card>
                   </div>
                 ))
-              ) : (
-                <p className="text-center mt-5">Libros cargando.</p>
               )}
             </div>
           </Col>

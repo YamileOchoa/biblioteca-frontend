@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 
 const API = import.meta.env.VITE_API_URL;
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [editUser, setEditUser] = useState(null);
   const [searchId, setSearchId] = useState("");
   const [filteredUser, setFilteredUser] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -92,34 +91,6 @@ const Users = () => {
   const handleClearSearch = () => {
     setSearchId("");
     setFilteredUser(null);
-  };
-
-  const handleEditChange = (e) => {
-    setEditUser({ ...editUser, [e.target.name]: e.target.value });
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API}/users/${editUser.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: editUser.name,
-          email: editUser.email,
-          role: editUser.role,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Error al actualizar usuario");
-      setEditUser(null);
-      fetchUsers();
-    } catch (error) {
-      alert(error.message);
-    }
   };
 
   const totalPages = Math.ceil(users.length / usersPerPage);
@@ -211,17 +182,6 @@ const Users = () => {
                     <button
                       className="btn btn-sm"
                       style={{
-                        backgroundColor: "#1F3A63",
-                        color: "#fff",
-                        fontWeight: "500",
-                      }}
-                      onClick={() => setEditUser(u)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn btn-sm"
-                      style={{
                         backgroundColor: "#DC3545",
                         color: "#fff",
                         fontWeight: "500",
@@ -296,69 +256,6 @@ const Users = () => {
               {new Date(selectedUser.updated_at).toLocaleString()}
             </p>
           </Modal.Body>
-        </Modal>
-      )}
-
-      {editUser && (
-        <Modal show centered onHide={() => setEditUser(null)} backdrop="static">
-          <Modal.Header
-            closeButton
-            style={{
-              backgroundColor: "#1F3A63",
-              color: "white",
-              borderBottom: "none",
-            }}
-            closeVariant="white"
-          >
-            <Modal.Title style={{ fontWeight: "500" }}>
-              Editar Usuario
-            </Modal.Title>
-          </Modal.Header>
-
-          <Form onSubmit={handleEditSubmit}>
-            <Modal.Body className="px-4 py-3">
-              <Form.Group className="mb-3">
-                <Form.Label>Nombre</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="name"
-                  value={editUser?.name || ""}
-                  onChange={handleEditChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Email</Form.Label>
-                <Form.Control
-                  type="email"
-                  name="email"
-                  value={editUser?.email || ""}
-                  onChange={handleEditChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Rol</Form.Label>
-                <Form.Select
-                  name="role"
-                  value={editUser?.role || ""}
-                  onChange={handleEditChange}
-                >
-                  <option value="user">lector</option>
-                  <option value="admin">admin</option>
-                </Form.Select>
-              </Form.Group>
-            </Modal.Body>
-
-            <Modal.Footer>
-              <Button
-                style={{ backgroundColor: "#1F3A63", border: "none" }}
-                type="submit"
-              >
-                Guardar Cambios
-              </Button>
-            </Modal.Footer>
-          </Form>
         </Modal>
       )}
 

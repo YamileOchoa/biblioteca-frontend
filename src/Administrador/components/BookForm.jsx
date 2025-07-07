@@ -95,8 +95,15 @@ const BookForm = ({ onSuccess, onCancel, bookToEdit }) => {
       : `${API}/books`;
 
     const formData = new FormData();
+
     for (const key in form) {
-      formData.append(key, form[key]);
+      if (key === "cover_image") {
+        if (form.cover_image && typeof form.cover_image === "object") {
+          formData.append("cover_image", form.cover_image);
+        }
+      } else {
+        formData.append(key, form[key]);
+      }
     }
 
     try {

@@ -5,9 +5,10 @@ import "../styles/BookSection.css";
 
 const BooksSection = ({ title, ads = [], limit = 12 }) => {
   const [books, setBooks] = useState([]);
-  const navigate = useNavigate();
+  const [favorites, setFavorites] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
   const getCategoryFilter = () => {
@@ -41,6 +42,27 @@ const BooksSection = ({ title, ads = [], limit = 12 }) => {
         setBooks(filteredBooks.slice(0, maxBooks));
       })
       .catch((err) => console.error("Error al obtener libros:", err));
+
+    // Cargar favoritos del usuario
+    const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+
+    if (user && token) {
+      fetch(`${API_URL}/favorites`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Error al obtener favoritos");
+          return res.json();
+        })
+        .then((data) => {
+          const bookIds = data.map((fav) => fav.book_id);
+          setFavorites(bookIds);
+        })
+        .catch((err) => console.error("Error al cargar favoritos:", err));
+    }
   }, []);
 
   const handleAgregarAFavoritos = async (bookId) => {
@@ -59,6 +81,13 @@ const BooksSection = ({ title, ads = [], limit = 12 }) => {
       return;
     }
 
+    if (favorites.includes(bookId)) {
+      setModalMessage("Este libro ya está en tus favoritos.");
+      setShowModal(true);
+      setTimeout(() => setShowModal(false), 2500);
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/favorites`, {
         method: "POST",
@@ -72,6 +101,7 @@ const BooksSection = ({ title, ads = [], limit = 12 }) => {
       if (!response.ok) throw new Error("No se pudo agregar a favoritos");
 
       setModalMessage("¡Libro agregado a tus favoritos!");
+      setFavorites((prev) => [...prev, bookId]);
       setShowModal(true);
       setTimeout(() => setShowModal(false), 2500);
     } catch (error) {
