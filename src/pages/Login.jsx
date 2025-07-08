@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
-import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 const Login = () => {
@@ -11,6 +10,7 @@ const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false); // Nuevo estado
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,7 +25,10 @@ const Login = () => {
 
     try {
       const userData = await login(form);
-      if (!userData) return;
+      if (!userData) {
+        setShowErrorModal(true); // Mostrar modal de error si no hay respuesta
+        return;
+      }
 
       if (userData.role === "admin") {
         navigate("/admin");
@@ -33,7 +36,7 @@ const Login = () => {
         setShowModal(true);
       }
     } catch (error) {
-      alert("Error al iniciar sesión: " + error.message);
+      setShowErrorModal(true); // También en caso de error inesperado
     }
   };
 
@@ -41,6 +44,7 @@ const Login = () => {
     setShowModal(false);
     navigate("/");
   };
+
   return (
     <>
       <div
@@ -141,6 +145,7 @@ const Login = () => {
         </form>
       </div>
 
+      {/* Modal de éxito */}
       <Modal
         show={showModal}
         onHide={handleClose}
@@ -168,6 +173,35 @@ const Login = () => {
             className="fw-semibold mt-2 px-4"
           >
             INICIO
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal de error */}
+      <Modal
+        show={showErrorModal}
+        onHide={() => setShowErrorModal(false)}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Body className="text-center p-4">
+          <i
+            className="bi bi-x-circle-fill"
+            style={{ fontSize: "3rem", color: "#dc3545" }}
+          ></i>
+          <h5 className="mt-3 fw-bold">Credenciales inválidas</h5>
+          <p className="mt-2">Vuelve a intentarlo con los datos correctos.</p>
+          <Button
+            onClick={() => setShowErrorModal(false)}
+            style={{
+              backgroundColor: "#dc3545",
+              color: "#fff",
+              border: "none",
+            }}
+            className="fw-semibold mt-2 px-4"
+          >
+            VOLVER
           </Button>
         </Modal.Body>
       </Modal>

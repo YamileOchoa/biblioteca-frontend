@@ -36,11 +36,13 @@
 }
 
 .portada-fav {
-  width: 90px;
-  height: 125px;
+  width: 160px;
+  min-height: 180px;
+  height: 100%;
   object-fit: cover;
   border-radius: 10px;
   flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
 .btn-ver {
@@ -78,4 +80,28 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.favorite-card.expanded .portada-fav {
+  min-height: 220px;
+  width: 200px;
+  transition: all 0.3s ease;
+}
+
+.sinopsis-preview {
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.5;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+.btn-link {
+  color: #1db5be;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
 }

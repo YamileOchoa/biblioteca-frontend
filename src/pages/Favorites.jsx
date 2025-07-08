@@ -10,6 +10,7 @@ export function Favorites() {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [visibleCount, setVisibleCount] = useState(5);
+  const [expanded, setExpanded] = useState({}); // Para controlar sinopsis expandida
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
@@ -27,14 +28,6 @@ export function Favorites() {
         if (!response.ok) throw new Error("Error al obtener favoritos");
 
         const data = await response.json();
-        console.log(
-          "FAVORITOS:",
-          data.map((book) => ({
-            title: book.title,
-            cover_image_url: book.cover_image_url,
-          }))
-        );
-
         setFavorites(data);
       } catch (error) {
         console.error("Error al obtener favoritos:", error);
@@ -70,6 +63,13 @@ export function Favorites() {
     setVisibleCount((prev) => prev + 5);
   };
 
+  const toggleExpand = (bookId) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [bookId]: !prev[bookId],
+    }));
+  };
+
   if (loading) {
     return (
       <div className="text-center my-5">Cargando tus libros favoritos...</div>
@@ -93,10 +93,12 @@ export function Favorites() {
         <div className="favorites-list container px-3">
           {favorites.slice(0, visibleCount).map((book) => (
             <div
-              className="favorite-card card shadow-sm mb-4 mx-auto"
+              className={`favorite-card card shadow-sm mb-4 mx-auto ${
+                expanded[book.id] ? "expanded" : ""
+              }`}
               key={book.id}
             >
-              <div className="d-flex gap-3 align-items-start">
+              <div className="d-flex gap-3">
                 {/* Portada */}
                 <img
                   src={book.cover_image_url || "/books/default.webp"}
@@ -110,15 +112,33 @@ export function Favorites() {
                 />
 
                 {/* Info */}
-                <div className="flex-grow-1">
-                  <h5 className="fw-semibold">{book.title}</h5>
-                  <p className="mb-1 text-muted">
-                    {book.year || "¿Año?"} · {book.pages || "¿?"} páginas
-                  </p>
-                  <p className="mb-2 text-muted">
-                    Editorial: {book.publisher || "Desconocida"}
-                  </p>
-                  <p className="sinopsis-preview">{book.synopsis}</p>
+                <div className="flex-grow-1 d-flex flex-column justify-content-between">
+                  <div>
+                    <h5 className="fw-semibold">{book.title}</h5>
+                    <p className="mb-1 text-muted">
+                      {book.year || "¿Año?"} · {book.pages || "¿?"} páginas
+                    </p>
+                    <p className="mb-2 text-muted">
+                      Editorial: {book.publisher || "Desconocida"}
+                    </p>
+
+                    <p className="sinopsis-preview">
+                      {expanded[book.id]
+                        ? book.synopsis
+                        : book.synopsis?.substring(0, 150) +
+                          (book.synopsis?.length > 150 ? "..." : "")}
+                    </p>
+
+                    {book.synopsis?.length > 150 && (
+                      <button
+                        className="btn btn-link p-0"
+                        onClick={() => toggleExpand(book.id)}
+                        style={{ fontSize: "0.9rem" }}
+                      >
+                        {expanded[book.id] ? "Ver menos ▲" : "Ver más ▼"}
+                      </button>
+                    )}
+                  </div>
 
                   <div className="mt-3 d-flex gap-2">
                     <button

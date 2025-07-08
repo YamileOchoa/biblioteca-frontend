@@ -231,19 +231,18 @@ const BookDetail = () => {
                   <strong>{book.author?.name || "Desconocido"}</strong>
                 </p>
 
-                <div className="d-flex align-items-center gap-3 mb-4">
-                  <div className="quantity-box d-flex align-items-center border rounded">
-                    <button className="btn btn-light" disabled>
-                      -
-                    </button>
-                    <span className="px-3">1</span>
-                    <button className="btn btn-light" disabled>
-                      +
-                    </button>
-                  </div>
+                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3 mb-4">
+                  <p className="m-0 fw-semibold">
+                    Stock:{" "}
+                    <span style={{ color: "#A08FE2" }}>
+                      {book.stock > 0
+                        ? `${book.stock} unidad(es)`
+                        : "Sin stock"}
+                    </span>
+                  </p>
 
                   <button
-                    className="btn btn-prestamo"
+                    className="btn btn-prestamo mt-2 mt-md-0"
                     onClick={solicitarPrestamo}
                   >
                     SOLICITAR PRÉSTAMO
